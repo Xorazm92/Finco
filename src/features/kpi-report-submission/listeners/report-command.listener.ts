@@ -4,7 +4,9 @@ import { ReportSubmissionService } from '../report-submission.service';
 
 @Injectable()
 export class ReportCommandListener {
-  constructor(private readonly reportSubmissionService: ReportSubmissionService) {}
+  constructor(
+    private readonly reportSubmissionService: ReportSubmissionService,
+  ) {}
 
   @OnEvent('telegram.report.submitted')
   async handleReport(payload: any) {

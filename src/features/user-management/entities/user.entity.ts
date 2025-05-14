@@ -10,8 +10,8 @@ export class UserEntity {
   @Column({ name: 'telegram_id', type: 'bigint', unique: true })
   telegramId: string;
 
-  @Column({ name: 'first_name', type: 'varchar', length: 100 })
-  firstName: string;
+  @Column({ name: 'first_name', type: 'varchar', length: 100, nullable: true })
+  firstName?: string;
 
   @Column({ name: 'last_name', type: 'varchar', length: 100, nullable: true })
   lastName?: string;
@@ -19,10 +19,13 @@ export class UserEntity {
   @Column({ name: 'username', type: 'varchar', length: 100, nullable: true })
   username?: string;
 
+  @Column({ name: 'chat_id', type: 'bigint', nullable: false })
+  chatId: string;
+
   @Column({
     type: 'enum',
     enum: UserRole,
-    default: UserRole.BANK_CLIENT,
+    default: UserRole.CLIENT,
   })
   role: UserRole;
 

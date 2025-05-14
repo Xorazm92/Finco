@@ -8,6 +8,9 @@ export class MessageListener {
 
   @OnEvent('telegram.message.received')
   async handleMessage(payload: any) {
-    await this.responseTimeService.processMessage(payload.telegramMessage, payload.ctx);
+    await this.responseTimeService.processMessage(
+      payload.telegramMessage,
+      payload.ctx,
+    );
   }
 }

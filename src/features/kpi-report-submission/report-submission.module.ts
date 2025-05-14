@@ -7,7 +7,9 @@ import { ReportCommandListener } from './listeners/report-command.listener';
 import { UserEntity } from '../user-management/entities/user.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([ReportLogEntity, ReportTypeEntity, UserEntity])],
+  imports: [
+    TypeOrmModule.forFeature([ReportLogEntity, ReportTypeEntity, UserEntity]),
+  ],
   providers: [ReportSubmissionService, ReportCommandListener],
   exports: [ReportSubmissionService],
 })

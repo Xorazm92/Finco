@@ -10,7 +10,9 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
     TelegrafModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (configService: ConfigService): import('nestjs-telegraf').TelegrafModuleOptions => ({
+      useFactory: (
+        configService: ConfigService,
+      ): import('nestjs-telegraf').TelegrafModuleOptions => ({
         token: configService.get<string>('telegram.botToken')!,
       }),
     }),

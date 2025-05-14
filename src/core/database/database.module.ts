@@ -19,7 +19,13 @@ import { KpiScoreEntity } from '../../features/kpi-calculation/entities/kpi-scor
         username: configService.get<string>('database.username'),
         password: configService.get<string>('database.password'),
         database: configService.get<string>('database.database'),
-        entities: [UserEntity, MessageLogEntity, ReportTypeEntity, ReportLogEntity, KpiScoreEntity],
+        entities: [
+          UserEntity,
+          MessageLogEntity,
+          ReportTypeEntity,
+          ReportLogEntity,
+          KpiScoreEntity,
+        ],
         synchronize: false, // Use migrations only!
         autoLoadEntities: true,
       }),

@@ -20,9 +20,13 @@ export class ReportSubmissionService {
   async processReport(payload: any) {
     // ...hisobotni saqlash va status aniqlash logikasi (soddalashtirilgan)
     // payload: {reportCode, telegramMessage, submittedByTelegramId, chatId, ctx}
-    let user = await this.userRepo.findOne({ where: { telegramId: String(payload.submittedByTelegramId) } });
+    const user = await this.userRepo.findOne({
+      where: { telegramId: String(payload.submittedByTelegramId) },
+    });
     if (!user) return;
-    const reportType = await this.reportTypeRepo.findOne({ where: { code: payload.reportCode } });
+    const reportType = await this.reportTypeRepo.findOne({
+      where: { code: payload.reportCode },
+    });
     if (!reportType) return;
     // Muddat va status hisoblash (mock)
     const deadlineAt = new Date();
