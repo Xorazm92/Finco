@@ -50,6 +50,7 @@ export class TelegramUpdate {
     const [_, username, role] = text.split(' ');
     const user = await this.userService.findByTelegramIdOrUsername(username.replace('@', ''));
     if (!user) return ctx.reply('Foydalanuvchi topilmadi');
+    if (!ctx.chat || !ctx.from) return;
     const chatId = String(ctx.chat.id);
     await this.userService.assignRoleToUserInChat(user.id, chatId, role as UserRole, String(ctx.from.id));
     ctx.reply(`@${username} uchun rol: ${role} tayinlandi`);

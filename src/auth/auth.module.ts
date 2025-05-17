@@ -6,21 +6,17 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtStrategy } from './jwt.strategy';
 import { JwtAuthGuard } from './jwt-auth.guard';
-import { UserManagementModule } from '../features/user-management/user-management.module';
+import { UserModule } from '../features/user-management/user.module';
 
 @Module({
   imports: [
     ConfigModule,
-    UserManagementModule,
     PassportModule,
-    JwtModule.registerAsync({
-      imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => ({
-        secret: configService.get<string>('JWT_SECRET'),
-        signOptions: { expiresIn: '12h' },
-      }),
-      inject: [ConfigService],
+    JwtModule.register({
+      secret: process.env.JWT_SECRET,
+      signOptions: { expiresIn: '1d' },
     }),
+    UserModule,
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy, JwtAuthGuard],

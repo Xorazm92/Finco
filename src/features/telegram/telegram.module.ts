@@ -5,6 +5,9 @@ import { TelegramUpdate } from './telegram.update';
 import { TelegramService } from './telegram.service';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 
+import { ResponseTimeModule } from '../kpi-response-time/response-time.module';
+import { UserModule } from '../user-management/user.module';
+
 @Module({
   imports: [
     TelegrafModule.forRootAsync({
@@ -17,6 +20,8 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
       }),
     }),
     EventEmitterModule.forRoot(),
+    ResponseTimeModule,
+    UserModule,
   ],
   providers: [TelegramUpdate, TelegramService],
   exports: [TelegramService],

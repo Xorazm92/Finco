@@ -44,13 +44,13 @@ export class ResponseTimeService {
     let user = await this.userRepo.findOne({
       where: {
         telegramId: String(message.from.id),
-        chatId: String(message.chat.id),
+        
       },
     });
     if (!user) {
       user = this.userRepo.create({
         telegramId: String(message.from.id),
-        chatId: String(message.chat.id),
+        
         firstName: message.from.first_name,
         lastName: message.from.last_name ?? undefined,
         username: message.from.username ?? undefined,
