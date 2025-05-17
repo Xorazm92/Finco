@@ -1,23 +1,44 @@
-import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
+import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { ROLES_KEY } from '../decorators/roles.decorator';
 import { UserRole } from '../enums/user-role.enum';
+import { UserService } from '../../features/user-management/user.service';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
-  constructor(private reflector: Reflector) {}
+  constructor(
+    private reflector: Reflector,
+    private userService: UserService,
+  ) {}
 
-  canActivate(context: ExecutionContext): boolean {
-    const requiredRoles = this.reflector.getAllAndOverride<UserRole[]>(
-      ROLES_KEY,
-      [context.getHandler(), context.getClass()],
-    );
-    if (!requiredRoles || requiredRoles.length === 0) {
-      return true;
-    }
+  async canActivate(context: ExecutionContext): Promise<boolean> {
+    const requiredRoles = this.reflector.getAllAndOverride<UserRole[]>(ROLES_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+    if (!requiredRoles || requiredRoles.length === 0) return true;
+
+    // Telegram uchun contextdan user va chat id ni olish
     const request = context.switchToHttp().getRequest();
-    const user = request.user;
-    // user.role bo'lishi shart
-    return user && requiredRoles.includes(user.role);
+    let telegramId: string | undefined;
+    let chatId: string | undefined;
+
+    if (request?.body?.message) {
+      telegramId = String(request.body.message.from.id);
+      chatId = String(request.body.message.chat.id);
+    } else if (request?.user && request?.chatId) {
+      telegramId = String(request.user.telegramId);
+      chatId = String(request.chatId);
+    }
+
+    if (!telegramId || !chatId) {
+      throw new ForbiddenException('Foydalanuvchi yoki chat aniqlanmadi');
+    }
+
+    const userRole = await this.userService.getUserRole(telegramId, chatId);
+    if (!userRole || !requiredRoles.includes(userRole)) {
+      throw new ForbiddenException('Sizda ushbu amal uchun ruxsat yo‘q');
+    }
+    return true;
   }
 }

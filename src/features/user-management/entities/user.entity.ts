@@ -1,5 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column, Index } from 'typeorm';
-import { UserRole } from '../../../shared/enums/user-role.enum';
+import { Entity, PrimaryGeneratedColumn, Column, Index, OneToMany } from 'typeorm';
+import { UserChatRoleEntity } from './user-chat-role.entity';
 
 @Entity('users')
 export class UserEntity {
@@ -19,15 +19,9 @@ export class UserEntity {
   @Column({ name: 'username', type: 'varchar', length: 100, nullable: true })
   username?: string;
 
-  @Column({ name: 'chat_id', type: 'bigint', nullable: false })
-  chatId: string;
-
-  @Column({
-    type: 'enum',
-    enum: UserRole,
-    default: UserRole.CLIENT,
-  })
-  role: UserRole;
+  // Guruh rollari endi alohida UserChatRoleEntity da saqlanadi
+  @OneToMany(() => UserChatRoleEntity, (ucr) => ucr.user)
+  chatRoles: UserChatRoleEntity[];
 
   @Column({ name: 'is_active', type: 'boolean', default: true })
   isActive: boolean;
