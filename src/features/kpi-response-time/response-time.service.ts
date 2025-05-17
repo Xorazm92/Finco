@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { MessageLogEntity, MessageStatus } from './entities/message-log.entity';
 import { UserEntity } from '../user-management/entities/user.entity';
 import { UserRole } from '../../shared/enums/user-role.enum';
+import { KPI_CONFIG } from '../../config/kpi.config';
 
 @Injectable()
 export class ResponseTimeService {
@@ -116,7 +117,8 @@ export class ResponseTimeService {
         user.role,
       )
     ) {
-      const T_window = 10 * 60 * 1000; // 10 daqiqa
+      const T_window = KPI_CONFIG.RESPONSE_TIME_WINDOW_MS;
+      const keywordMatchThreshold = KPI_CONFIG.KEYWORD_MATCH_THRESHOLD;
       const now = log.sentAt.getTime();
       const pendingQuestions = await this.messageLogRepo.find({
         where: {
@@ -155,7 +157,6 @@ export class ResponseTimeService {
             bestMatch = q;
           }
         }
-        const keywordMatchThreshold = 2; // configdan olinishi mumkin
         if (bestMatch && bestScore >= keywordMatchThreshold) {
           const responseTime =
             (log.sentAt.getTime() - bestMatch.sentAt.getTime()) / 1000;
@@ -172,9 +173,19 @@ export class ResponseTimeService {
           return;
         }
         // SUPERVISORga signal: noaniq bog'lanish
-        // TODO: Supervisor notification (future)
+        await this.notifySupervisors(message.chat.id, 'Noaniq javob matching holati. Tekshiruv va tasdiqlash kerak.');
       }
     }
+  }
+
+  // SUPERVISORga signal yuborish uchun yordamchi metod
+  private async notifySupervisors(chatId: string, notification: string) {
+    // Mas’ul SUPERVISORlarni aniqlash (UserChatRoleEntity orqali)
+    // TODO: UserChatRoleEntity dan ushbu chat uchun SUPERVISORlarni topib, ularga notification yuboring.
+    // Bu yerda TelegramService yoki ctx orqali xabar yuborish mumkin.
+    // Masalan:
+    // const supervisors = await this.userChatRoleRepository.find({ where: { chatId, role: UserRole.SUPERVISOR } });
+    // supervisors.forEach(sup => this.telegramService.sendMessage(sup.userId, notification));
   }
 }
 

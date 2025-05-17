@@ -35,7 +35,12 @@ export class RolesGuard implements CanActivate {
       throw new ForbiddenException('Foydalanuvchi yoki chat aniqlanmadi');
     }
 
-    const userRole = await this.userService.getUserRole(telegramId, chatId);
+    // UserId ni aniqlash va UserChatRoleEntity orqali rolni tekshirish
+    const user = await this.userService.findByTelegramId(telegramId);
+    if (!user) {
+      throw new ForbiddenException('Foydalanuvchi topilmadi');
+    }
+    const userRole = await this.userService.getUserRoleInChat(user.id, chatId);
     if (!userRole || !requiredRoles.includes(userRole)) {
       throw new ForbiddenException('Sizda ushbu amal uchun ruxsat yo‘q');
     }

@@ -22,11 +22,6 @@ export class TelegramUpdate {
     private readonly userService: UserService,
   ) {}
 
-
-@Update()
-export class TelegramUpdate {
-  constructor(private readonly eventEmitter: EventEmitter2) {}
-
   @Start()
   async onStart(@Ctx() ctx: Context) {
     await ctx.reply(

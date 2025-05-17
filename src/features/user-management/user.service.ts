@@ -77,4 +77,35 @@ export class UserService {
     if (!user) return null;
     return this.getUserRoleInChat(user.id, chatId);
   }
+
+  /**
+   * Username/password orqali foydalanuvchini tekshiradi (login uchun)
+   */
+  async validateUser(username: string, password: string): Promise<UserEntity | null> {
+    // TODO: Parolni hash bilan solishtirish (demo uchun oddiy tekshiruv)
+    const user = await this.userRepository.findOne({ where: { username } });
+    if (user && user['password'] && user['password'] === password) {
+      return user;
+    }
+    return null;
+  }
+
+  /**
+   * Foydalanuvchini ID orqali topish (JWT uchun)
+   */
+  async findById(id: number): Promise<UserEntity | null> {
+    return (await this.userRepository.findOne({ where: { id } })) ?? null;
+  }
+
+  /**
+   * Telegram ID yoki username orqali userni topish
+   */
+  async findByTelegramIdOrUsername(identifier: string): Promise<UserEntity | null> {
+    let user = await this.userRepository.findOne({ where: { telegramId: identifier } });
+    if (!user) {
+      user = await this.userRepository.findOne({ where: { username: identifier } });
+    }
+    return user ?? null;
+  }
 }
+

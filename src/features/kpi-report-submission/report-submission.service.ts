@@ -18,7 +18,6 @@ export class ReportSubmissionService {
   ) {}
 
   async processReport(payload: any) {
-    // ...hisobotni saqlash va status aniqlash logikasi (soddalashtirilgan)
     // payload: {reportCode, telegramMessage, submittedByTelegramId, chatId, ctx}
     const user = await this.userRepo.findOne({
       where: { telegramId: String(payload.submittedByTelegramId) },
@@ -28,22 +27,38 @@ export class ReportSubmissionService {
       where: { code: payload.reportCode },
     });
     if (!reportType) return;
-    // Muddat va status hisoblash (mock)
-    const deadlineAt = new Date();
-    const submittedAt = new Date();
-    const status = ReportStatus.PENDING;
+
+    // deadline hisoblash (reportType.deadlineMinutes asosida)
+    const now = new Date();
+    let deadlineAt: Date | undefined = undefined;
+    if (reportType.deadlineMinutes) {
+      deadlineAt = new Date(now.getTime() + reportType.deadlineMinutes * 60 * 1000);
+    }
+
+    // period aniqlash (masalan, har kuni yoki haftalik bo‘lsa, hozircha mock)
+    const periodStartDate = now; // TODO: haqiqiy periodga moslashtirish
+    const periodEndDate = now;   // TODO: haqiqiy periodga moslashtirish
+
+    // status hisoblash
+    let status = ReportStatus.PENDING;
+    if (deadlineAt && now > deadlineAt) {
+      status = ReportStatus.LATE;
+    }
+
     const report = this.reportLogRepo.create({
       reportType,
       telegramChatId: String(payload.chatId),
       submittedByUser: user,
-      submittedAt,
-      fileTelegramId: payload.telegramMessage.document.file_id,
-      fileName: payload.telegramMessage.document.file_name,
-      periodStartDate: new Date(),
-      periodEndDate: new Date(),
+      submittedAt: now,
+      fileTelegramId: payload.telegramMessage.document?.file_id,
+      fileName: payload.telegramMessage.document?.file_name,
+      periodStartDate,
+      periodEndDate,
       deadlineAt,
       status,
     });
     await this.reportLogRepo.save(report);
+
+    // TODO: deadline yaqinlashganda/otganda mas’ullarga eslatma yuborish (scheduler)
   }
 }

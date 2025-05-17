@@ -1,5 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, Index, OneToMany } from 'typeorm';
 import { UserChatRoleEntity } from './user-chat-role.entity';
+import { UserRole } from './user-role.enum';
 
 @Entity('users')
 export class UserEntity {
@@ -16,8 +17,19 @@ export class UserEntity {
   @Column({ name: 'last_name', type: 'varchar', length: 100, nullable: true })
   lastName?: string;
 
-  @Column({ name: 'username', type: 'varchar', length: 100, nullable: true })
-  username?: string;
+  @Index({ unique: true })
+  @Column({ name: 'username', type: 'varchar', length: 100, unique: true, nullable: false })
+  username: string;
+
+  @Column({
+    type: 'enum',
+    enum: UserRole,
+    default: UserRole.CLIENT,
+  })
+  role: UserRole;
+
+  @Column({ name: 'password', type: 'varchar', length: 255, nullable: false })
+  password: string;
 
   // Guruh rollari endi alohida UserChatRoleEntity da saqlanadi
   @OneToMany(() => UserChatRoleEntity, (ucr) => ucr.user)
@@ -25,4 +37,10 @@ export class UserEntity {
 
   @Column({ name: 'is_active', type: 'boolean', default: true })
   isActive: boolean;
+
+  @Column({ name: 'created_at', type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  createdAt: Date;
+
+  @Column({ name: 'updated_at', type: 'timestamp', default: () => 'CURRENT_TIMESTAMP', onUpdate: 'CURRENT_TIMESTAMP' })
+  updatedAt: Date;
 }

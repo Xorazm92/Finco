@@ -78,7 +78,10 @@ export class MessageLogEntity {
   replyDetectionMethod?:
     | 'REPLY'
     | 'TIME_WINDOW_SINGLE_PENDING'
-    | 'TIME_WINDOW_MULTIPLE_PENDING_KEYWORD_MATCH';
+    | 'TIME_WINDOW_MULTIPLE_PENDING_KEYWORD_MATCH'
+    | 'SUPERVISOR_REVIEW'
+    | 'SUPERVISOR_APPROVED'
+    | 'SUPERVISOR_REJECTED';
 
   @Column({ type: 'float', nullable: true })
   confidenceScore?: number;

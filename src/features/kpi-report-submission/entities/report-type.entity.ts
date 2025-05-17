@@ -13,4 +13,13 @@ export class ReportTypeEntity {
 
   @Column({ nullable: true })
   description: string;
+
+  @Column({ type: 'int', nullable: true })
+  deadlineMinutes: number; // deadline (soatda yoki minutda)
+
+  @Column('simple-array', { nullable: true })
+  responsibleRoles: string[]; // mas’ul rollar (UserRole enum stringlari)
+
+  @Column('simple-array', { nullable: true })
+  hashtags: string[]; // hisobot uchun hashtaglar
 }
