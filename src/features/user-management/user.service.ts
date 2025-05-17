@@ -82,8 +82,10 @@ export class UserService {
    * Username/password orqali foydalanuvchini tekshiradi (login uchun)
    */
   async validateUser(username: string, password: string): Promise<UserEntity | null> {
-    // TODO: Parolni hash bilan solishtirish (demo uchun oddiy tekshiruv)
+    const fs = require('fs');
+    fs.appendFileSync('diagnostic.log', `VALIDATE USER: ${username} ${password}\n`);
     const user = await this.userRepository.findOne({ where: { username } });
+    fs.appendFileSync('diagnostic.log', `FOUND USER: ${JSON.stringify(user)}\n`);
     if (user && user['password'] && user['password'] === password) {
       return user;
     }

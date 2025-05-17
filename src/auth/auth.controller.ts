@@ -8,6 +8,9 @@ export class AuthController {
 
   @Post('login')
   async login(@Body() body: { username: string; password: string }) {
+    if (!body || typeof body.username !== 'string' || typeof body.password !== 'string') {
+      return { statusCode: 400, message: 'username va password majburiy!' };
+    }
     return this.authService.login(body.username, body.password);
   }
 
