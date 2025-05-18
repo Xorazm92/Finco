@@ -1,9 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UserEntity } from '../user-management/entities/user.entity';
 import { UserChatRoleEntity } from '../user-management/entities/user-chat-role.entity';
 import { UserRole } from '../../shared/enums/user-role.enum';
+import * as bcrypt from 'bcryptjs';
 
 @Injectable()
 export class UserService {
@@ -18,8 +19,11 @@ export class UserService {
     return this.userRepository.find();
   }
 
-  async findOne(id: number): Promise<UserEntity | undefined> {
-    return (await this.userRepository.findOne({ where: { id } })) ?? undefined;
+  async findOne(id: number): Promise<UserEntity> {
+    const user = await this.userRepository.findOne({ where: { id } });
+    if (!user) throw new NotFoundException('Foydalanuvchi topilmadi');
+    const { password, ...rest } = user;
+    return rest as UserEntity;
   }
 
   async findByTelegramId(
@@ -39,18 +43,35 @@ export class UserService {
   }
 
   async createOrUpdate(userData: Partial<UserEntity>): Promise<UserEntity> {
-    let user = await this.findByTelegramId(userData.telegramId!);
-    if (!user) {
-      user = this.userRepository.create({
-        telegramId: userData.telegramId,
-        firstName: userData.firstName,
-        lastName: userData.lastName,
-        username: userData.username,
-        isActive: true,
-      });
-      user = await this.userRepository.save(user);
+    // Username yoki telegramId allaqachon mavjudligini tekshirish
+    if (userData.username) {
+      const existingByUsername = await this.userRepository.findOne({ where: { username: userData.username } });
+      if (existingByUsername) {
+        throw new BadRequestException('Bunday username allaqachon mavjud');
+      }
     }
-    return user;
+    if (userData.telegramId) {
+      const existingByTelegramId = await this.userRepository.findOne({ where: { telegramId: userData.telegramId } });
+      if (existingByTelegramId) {
+        throw new BadRequestException('Bunday Telegram ID allaqachon mavjud');
+      }
+    }
+    if (!userData.password) {
+      throw new BadRequestException('Parol majburiy');
+    }
+    const hashedPassword = await bcrypt.hash(userData.password, 10);
+    const user = this.userRepository.create({
+      telegramId: userData.telegramId,
+      firstName: userData.firstName,
+      lastName: userData.lastName,
+      username: userData.username,
+      password: hashedPassword,
+      isActive: true,
+      role: userData.role ?? UserRole.CLIENT,
+    });
+    const savedUser = await this.userRepository.save(user);
+    const { password, ...rest } = savedUser;
+    return rest as UserEntity;
   }
 
   async assignRoleToUserInChat(
@@ -86,10 +107,36 @@ export class UserService {
     fs.appendFileSync('diagnostic.log', `VALIDATE USER: ${username} ${password}\n`);
     const user = await this.userRepository.findOne({ where: { username } });
     fs.appendFileSync('diagnostic.log', `FOUND USER: ${JSON.stringify(user)}\n`);
-    if (user && user['password'] && user['password'] === password) {
-      return user;
+    if (user && user.password && await bcrypt.compare(password, user.password)) {
+      // Parolni javobdan olib tashlash
+      const { password, ...rest } = user;
+      return rest as UserEntity;
     }
     return null;
+  }
+
+  /**
+   * Foydalanuvchini yangilash (ADMIN uchun)
+   */
+  async updateUser(id: number, dto: Partial<UserEntity>): Promise<UserEntity> {
+    const user = await this.userRepository.findOne({ where: { id } });
+    if (!user) throw new NotFoundException('Foydalanuvchi topilmadi');
+    if (dto.password) {
+      dto.password = await bcrypt.hash(dto.password, 10);
+    }
+    Object.assign(user, dto);
+    await this.userRepository.save(user);
+    const { password, ...rest } = user;
+    return rest as UserEntity;
+  }
+
+  /**
+   * Foydalanuvchini o'chirish (ADMIN uchun)
+   */
+  async deleteUser(id: number): Promise<void> {
+    const user = await this.userRepository.findOne({ where: { id } });
+    if (!user) throw new NotFoundException('Foydalanuvchi topilmadi');
+    await this.userRepository.delete(id);
   }
 
   /**

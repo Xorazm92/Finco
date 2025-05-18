@@ -1,4 +1,10 @@
 import { Module } from '@nestjs/common';
+import { AiModule } from './ai/ai.module';
+import { MessageLogModule } from './features/message-log/message-log.module';
+import { MessageLogTimeoutModule } from './features/message-log/message-log-timeout.module';
+import { MessageLogTimeoutCronModule } from './features/message-log/message-log-timeout-cron.module';
+import { TelegramModule } from './telegram/telegram.module';
+import { KpiModule } from './features/kpi/kpi.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { CoreModule } from './core/core.module';
@@ -22,6 +28,7 @@ import { AuthModule } from './auth/auth.module';
     ReportSubmissionModule,
     KpiCalculationModule,
     AuthModule,
+    AiModule,
   ],
   controllers: [AppController],
   providers: [AppService],

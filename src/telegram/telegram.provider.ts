@@ -43,15 +43,19 @@ export class TelegramBotProvider implements OnModuleInit {
     this.initHandlers();
     // AI feedback commands (SUPERVISOR/ADMIN)
     this.bot.onText(/\/approve_ai\s+(\d+)/i, async (msg, match) => {
+      if (!match) return;
       await this.handleAiFeedbackCommand(msg, match, 'approved');
     });
     this.bot.onText(/\/reject_ai\s+(\d+)/i, async (msg, match) => {
+      if (!match) return;
       await this.handleAiFeedbackCommand(msg, match, 'rejected');
     });
     this.bot.onText(/\/correct_ai\s+(\d+)\s+([\s\S]+)/i, async (msg, match) => {
+      if (!match) return;
       await this.handleAiFeedbackCommand(msg, match, 'corrected');
     });
     this.bot.onText(/\/review_ai_assessment\s+(\d+)/i, async (msg, match) => {
+      if (!match) return;
       await this.handleReviewAiAssessmentCommand(msg, match);
     });
   }
@@ -234,7 +238,7 @@ export class TelegramBotProvider implements OnModuleInit {
         let user = null;
         if (target) {
           if (target.startsWith('@')) {
-            user = await this.userService.findByTelegramIdOrUsername(undefined, target.slice(1));
+            user = await this.userService.findByTelegramIdOrUsername(target.slice(1));
           } else if (/^\d+$/.test(target)) {
             user = await this.userService.findOne(Number(target));
           }
@@ -316,7 +320,7 @@ export class TelegramBotProvider implements OnModuleInit {
         let user = null;
         if (target) {
           if (target.startsWith('@')) {
-            user = await this.userService.findByTelegramIdOrUsername(undefined, target.slice(1));
+            user = await this.userService.findByTelegramIdOrUsername(target.slice(1));
           } else if (/^\d+$/.test(target)) {
             user = await this.userService.findOne(Number(target));
           }
@@ -370,10 +374,10 @@ export class TelegramBotProvider implements OnModuleInit {
           await this.bot.sendMessage(msg.chat.id, 'Hech bir foydalanuvchida KPI statistikasi yo‘q.');
           return;
         }
-        const top = [...statsWithData].sort((a, b) => (b.stats.weekAvg ?? 0) - (a.stats.weekAvg ?? 0)).slice(0, n);
+        const top = [...statsWithData].sort((a, b) => ((b.stats?.weekAvg ?? 0) - (a.stats?.weekAvg ?? 0))).slice(0, n);
         const resp =
           `🏆 Eng yaxshi ${n} foydalanuvchi (haftalik o‘rtacha KPI):\n` +
-          top.map((t, i) => `${i + 1}. @${t.user.username || t.user.telegramId} — ${t.stats.weekAvg?.toFixed(2) ?? '-'}`).join('\n');
+          top.map((t, i) => `${i + 1}. @${t.user.username || t.user.telegramId} — ${t.stats?.weekAvg?.toFixed(2) ?? '-'}`).join('\n');
         await this.bot.sendMessage(msg.chat.id, resp);
       } catch (err) {
         this.logger.error('TopKPI error', err);
@@ -407,10 +411,10 @@ export class TelegramBotProvider implements OnModuleInit {
           await this.bot.sendMessage(msg.chat.id, 'Hech bir foydalanuvchida KPI statistikasi yo‘q.');
           return;
         }
-        const bottom = [...statsWithData].sort((a, b) => (a.stats.weekAvg ?? 0) - (b.stats.weekAvg ?? 0)).slice(0, n);
+        const bottom = [...statsWithData].sort((a, b) => ((a.stats?.weekAvg ?? 0) - (b.stats?.weekAvg ?? 0))).slice(0, n);
         const resp =
           `🔻 Eng past ${n} foydalanuvchi (haftalik o‘rtacha KPI):\n` +
-          bottom.map((t, i) => `${i + 1}. @${t.user.username || t.user.telegramId} — ${t.stats.weekAvg?.toFixed(2) ?? '-'}`).join('\n');
+          bottom.map((t, i) => `${i + 1}. @${t.user.username || t.user.telegramId} — ${t.stats?.weekAvg?.toFixed(2) ?? '-'}`).join('\n');
         await this.bot.sendMessage(msg.chat.id, resp);
       } catch (err) {
         this.logger.error('BottomKPI error', err);
@@ -614,11 +618,7 @@ export class TelegramBotProvider implements OnModuleInit {
           attachmentType: msg.document ? 'file' : msg.photo ? 'photo' : msg.voice ? 'voice' : undefined,
         });
       } catch (err) {
-        if (this.logger && typeof this.logger.error === 'function') {
-          this.logger.error('MessageLog error', err);
-        } else {
-          console.error('MessageLog error', err);
-        }
+        this.logger?.error?.('MessageLog error', err);
       }
     });
   }

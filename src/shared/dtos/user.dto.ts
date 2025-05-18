@@ -6,6 +6,7 @@ export class CreateUserDto {
   @IsString()
   telegramId: string;
 
+
   @IsNotEmpty()
   @IsString()
   firstName: string;
@@ -20,4 +21,5 @@ export class CreateUserDto {
 
   @IsEnum(UserRole)
   role: UserRole;
+
 }

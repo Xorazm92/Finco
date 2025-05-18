@@ -2,8 +2,30 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
+import { AllExceptionsFilter } from './common/filters/http-exception.filter';
+import { ValidationPipe } from '@nestjs/common';
+
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  // Global exception filter
+  app.useGlobalFilters(new AllExceptionsFilter());
+
+  // Global validation pipe
+  app.useGlobalPipes(new ValidationPipe({
+    whitelist: true,
+    forbidNonWhitelisted: true,
+    transform: true,
+    transformOptions: { enableImplicitConversion: true },
+    errorHttpStatusCode: 422,
+    exceptionFactory: (errors) => {
+      return {
+        statusCode: 422,
+        message: errors.map(e => Object.values(e.constraints || {}).join('; ')).join(' | '),
+        error: 'ValidationError',
+      };
+    },
+  }));
 
   // Swagger config
   const config = new DocumentBuilder()
