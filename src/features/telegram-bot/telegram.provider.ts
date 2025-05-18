@@ -2,17 +2,17 @@ import { Injectable, OnModuleInit, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { UserService } from '../features/user-management/user.service';
-import { KpiService } from '../features/kpi/kpi.service';
-import { KpiAnalyticsService } from '../features/kpi/kpi-analytics.service';
-import { AuditLogService } from '../features/kpi/audit-log.service';
-import { MessageLogService } from '../features/message-log/message-log.service';
-import { ReportSubmissionService } from '../features/kpi-report-submission/report-submission.service';
-import { KpiCalculationService } from '../features/kpi/kpi-calculation.service';
-import { ReportTypeEntity } from '../features/kpi-report-submission/entities/report-type.entity';
-import { parseKpiMessage } from '../features/kpi/dto/parse-kpi-message.util';
+import { UserService } from '../user-management/user.service';
+import { KpiService } from '../kpi/kpi.service';
+import { KpiAnalyticsService } from '../kpi/kpi-analytics.service';
+import { AuditLogService } from '../kpi/audit-log.service';
+import { MessageLogService } from '../message-log/message-log.service';
+import { ReportSubmissionService } from '../kpi-report-submission/report-submission.service';
+import { KpiCalculationService } from '../kpi/kpi-calculation.service';
+import { ReportTypeEntity } from '../kpi-report-submission/entities/report-type.entity';
+import { parseKpiMessage } from '../kpi/dto/parse-kpi-message.util';
 import TelegramBot from 'node-telegram-bot-api';
-import { UserRole } from '../shared/enums/user-role.enum';
+import { UserRole } from '../../shared/enums/user-role.enum';
 
 @Injectable()
 export class TelegramBotProvider implements OnModuleInit {
