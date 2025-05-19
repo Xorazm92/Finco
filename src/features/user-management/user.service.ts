@@ -35,6 +35,14 @@ export class UserService {
     );
   }
 
+  /**
+   * Telegram ID orqali user id ni qaytaradi (agar mavjud bo'lsa)
+   */
+  async getUserIdByTelegram(telegramId: string | number): Promise<number | null> {
+    const user = await this.userRepository.findOne({ where: { telegramId: String(telegramId) } });
+    return user ? user.id : null;
+  }
+
   async getUserRoleInChat(userId: number, chatId: string): Promise<UserRole | null> {
     const userChatRole = await this.userChatRoleRepository.findOne({
       where: { userId, chatId },

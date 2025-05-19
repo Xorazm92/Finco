@@ -10,6 +10,8 @@ import RolesPage from './pages/RolesPage';
 import KpiPage from './pages/KpiPage';
 import ReportsPage from './pages/ReportsPage';
 import NotFoundPage from './pages/NotFoundPage';
+import { AuthProvider } from './context/AuthContext';
+import ProtectedRoute from './components/ProtectedRoute';
 
 const theme = createTheme({
   palette: {
@@ -21,19 +23,25 @@ const theme = createTheme({
 
 export default function App() {
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/" element={<DashboardLayout />}>
-          <Route index element={<HomePage />} />
-          <Route path="users" element={<UsersPage />} />
-          <Route path="roles" element={<RolesPage />} />
-          <Route path="kpi" element={<KpiPage />} />
-          <Route path="reports" element={<ReportsPage />} />
-        </Route>
-        <Route path="*" element={<NotFoundPage />} />
-      </Routes>
-    </ThemeProvider>
+    <AuthProvider>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/" element={
+            <ProtectedRoute>
+              <DashboardLayout />
+            </ProtectedRoute>
+          }>
+            <Route index element={<HomePage />} />
+            <Route path="users" element={<UsersPage />} />
+            <Route path="roles" element={<RolesPage />} />
+            <Route path="kpi" element={<KpiPage />} />
+            <Route path="reports" element={<ReportsPage />} />
+          </Route>
+          <Route path="*" element={<NotFoundPage />} />
+        </Routes>
+      </ThemeProvider>
+    </AuthProvider>
   );
 }

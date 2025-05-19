@@ -47,6 +47,47 @@ export class MessageLogService {
       }
     }
 
+    // SI asosidagi matching: reply bo'lmagan javoblar uchun
+    if (!data.isReplyToMessageId && ['ACCOUNTANT', 'BANK_CLIENT', 'BANK_CLIENT_SPECIALIST'].includes(data.senderRoleAtMoment || '')) {
+      // Oxirgi 10 ta javobsiz CLIENT savolini topamiz
+      const recentQuestions = await this.messageLogRepo.find({
+        where: {
+          telegramChatId: data.telegramChatId,
+          isQuestion: true,
+          questionStatus: 'PENDING',
+        },
+        order: { sentAt: 'DESC' },
+        take: 10,
+      });
+      if (recentQuestions.length && data.textContent) {
+        // Eng yaxshi mos keladigan savolni topish (oddiy keyword overlap bilan)
+        const answerKeywords = (data.textContent || '').toLowerCase().split(/\W+/).filter(Boolean);
+        let bestMatch: MessageLogEntity | null = null;
+        let bestScore = 0;
+        for (const q of recentQuestions) {
+          const qKeywords = (q.textContent || '').toLowerCase().split(/\W+/).filter(Boolean);
+          const overlap = qKeywords.filter(k => answerKeywords.includes(k)).length;
+          if (overlap > bestScore) {
+            bestScore = overlap;
+            bestMatch = q;
+          }
+        }
+        // Agar overlap > 0 bo'lsa, matching deb hisoblaymiz
+        if (bestMatch && bestScore > 0) {
+          const responseTimeSeconds = Math.floor((+new Date(data.sentAt!) - +new Date(bestMatch.sentAt)) / 1000);
+          bestMatch.questionStatus = 'ANSWERED';
+          bestMatch.answeredByMessageId = data.telegramMessageId!;
+          bestMatch.responseTimeSeconds = responseTimeSeconds;
+          bestMatch.answerDetectionMethod = 'semantic';
+          await this.messageLogRepo.save(bestMatch);
+          questionStatus = 'ANSWERED';
+          answeredByMessageId = data.telegramMessageId!;
+          answerDetectionMethod = 'semantic';
+          responseTimeSeconds;
+        }
+      }
+    }
+
     // Yangi xabarni loglaymiz
     const message = new MessageLogEntity();
     message.telegramMessageId = data.telegramMessageId!;

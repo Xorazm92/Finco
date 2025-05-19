@@ -26,4 +26,8 @@ export class AiAnalysisResultService {
       take: limit,
     });
   }
+
+  async countAll() {
+    return this.resultRepo.count();
+  }
 }

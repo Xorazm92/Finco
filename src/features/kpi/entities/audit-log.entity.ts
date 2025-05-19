@@ -14,14 +14,14 @@ export class AuditLogEntity {
   @Column()
   performedBy: number; // userId
 
-  @Column({ nullable: true })
-  oldValue: number;
+  @Column({ nullable: true, type: 'varchar' })
+  oldValue: string | number;
 
   @Column({ nullable: true })
   oldComment: string;
 
-  @Column({ nullable: true })
-  newValue: number;
+  @Column({ nullable: true, type: 'varchar' })
+  newValue: string | number;
 
   @Column({ nullable: true })
   newComment: string;

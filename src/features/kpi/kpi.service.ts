@@ -9,6 +9,7 @@ export class KpiService {
   constructor(
     @InjectRepository(KpiEntity)
     private readonly kpiRepository: Repository<KpiEntity>,
+    private readonly auditLogService: import('./audit-log.service').AuditLogService,
   ) {}
 
   async create(userId: number, dto: CreateKpiDto): Promise<KpiEntity> {
@@ -29,18 +30,39 @@ export class KpiService {
     return kpi ?? undefined;
   }
 
-  async updateKpi(id: number, value: number, comment?: string): Promise<KpiEntity | undefined> {
+  async updateKpi(id: number, value: number, comment?: string, performedBy?: number, reason?: string): Promise<KpiEntity | undefined> {
     const kpi = await this.findById(id);
     if (!kpi) return undefined;
+    const oldValue = kpi.value;
+    const oldComment = kpi.comment;
     kpi.value = value;
     kpi.comment = comment;
-    return this.kpiRepository.save(kpi);
+    const updated = await this.kpiRepository.save(kpi);
+    // Audit log
+    await this.auditLogService.logEdit({
+      kpiId: kpi.id,
+      performedBy: performedBy || 0,
+      oldValue: oldValue,
+      oldComment: oldComment || '',
+      newValue: value,
+      newComment: comment || '',
+      reason: reason || 'KPI edit via bot',
+    });
+    return updated;
   }
 
-  async deleteKpi(id: number): Promise<KpiEntity | undefined> {
+  async deleteKpi(id: number, performedBy?: number, reason?: string): Promise<KpiEntity | undefined> {
     const kpi = await this.findById(id);
     if (!kpi) return undefined;
     await this.kpiRepository.delete(id);
+    // Audit log
+    await this.auditLogService.logDelete({
+      kpiId: kpi.id,
+      performedBy: performedBy || 0,
+      oldValue: kpi.value,
+      oldComment: kpi.comment || '',
+      reason: reason || 'KPI delete via bot',
+    });
     return kpi;
   }
 }

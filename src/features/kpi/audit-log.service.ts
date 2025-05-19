@@ -57,6 +57,13 @@ export class AuditLogService {
     });
   }
 
+  async findByUserId(userId: number): Promise<AuditLogEntity[]> {
+    return this.auditLogRepo.find({
+      where: { performedBy: userId },
+      order: { createdAt: 'DESC' },
+    });
+  }
+
   async findLast(n: number): Promise<AuditLogEntity[]> {
     return this.auditLogRepo.find({
       order: { createdAt: 'DESC' },

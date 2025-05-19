@@ -28,4 +28,8 @@ export class HumanFeedbackService {
       take: limit,
     });
   }
+
+  async countByVerdict(verdict: 'approved' | 'rejected' | 'corrected') {
+    return this.feedbackRepo.count({ where: { verdict } });
+  }
 }
