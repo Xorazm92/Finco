@@ -20,6 +20,59 @@ export class KpiCalculationService {
    * Foydalanuvchi uchun KPI statistikalarini hisoblash
    */
   async getUserKpiStats(telegramId: string, periodDays = 30) {
+    // ... (old code remains)
+  }
+
+  /**
+   * Guruh uchun KPI statistikalarini hisoblash
+   */
+  async getGroupKpiStats(chatId: string, periodDays = 30) {
+    const now = new Date();
+    const fromDate = new Date(now.getTime() - periodDays * 24 * 60 * 60 * 1000);
+    const questions = await this.messageLogRepo.find({
+      where: {
+        telegramChatId: chatId,
+        isQuestion: true,
+        sentAt: fromDate <= now ? fromDate : now,
+      },
+    });
+    const totalQuestions = questions.length;
+    const unanswered = questions.filter(q => q.questionStatus !== 'ANSWERED');
+    const unansweredPercent = totalQuestions ? Math.round((unanswered.length / totalQuestions) * 100) : 0;
+    const answered = questions.filter(q => q.questionStatus === 'ANSWERED');
+    const avgResponseTime = answered.length ? Math.round(answered.reduce((a, b) => a + (b.responseTimeSeconds || 0), 0) / answered.length) : null;
+    return {
+      totalQuestions,
+      unansweredQuestions: unanswered.length,
+      unansweredPercent,
+      avgResponseTimeSeconds: avgResponseTime,
+    };
+  }
+
+  /**
+   * Umumiy (system-wide) KPI statistikasi
+   */
+  async getSummaryKpiStats(periodDays = 30) {
+    const now = new Date();
+    const fromDate = new Date(now.getTime() - periodDays * 24 * 60 * 60 * 1000);
+    const questions = await this.messageLogRepo.find({
+      where: {
+        isQuestion: true,
+        sentAt: fromDate <= now ? fromDate : now,
+      },
+    });
+    const totalQuestions = questions.length;
+    const unanswered = questions.filter(q => q.questionStatus !== 'ANSWERED');
+    const unansweredPercent = totalQuestions ? Math.round((unanswered.length / totalQuestions) * 100) : 0;
+    const answered = questions.filter(q => q.questionStatus === 'ANSWERED');
+    const avgResponseTime = answered.length ? Math.round(answered.reduce((a, b) => a + (b.responseTimeSeconds || 0), 0) / answered.length) : null;
+    return {
+      totalQuestions,
+      unansweredQuestions: unanswered.length,
+      unansweredPercent,
+      avgResponseTimeSeconds: avgResponseTime,
+    };
+  }
     const now = new Date();
     const fromDate = new Date(now.getTime() - periodDays * 24 * 60 * 60 * 1000);
 

@@ -10,6 +10,14 @@ export class AiQueueService {
     return this.aiQueue.add('sentiment', { text });
   }
 
+  async addQuestionAnalysisJob(text: string) {
+    return this.aiQueue.add('question_analysis', { text });
+  }
+
+  async addReplyAnalysisJob(question: string, answer: string) {
+    return this.aiQueue.add('reply_analysis', { question, answer });
+  }
+
   async getJobResult(jobId: string) {
     const job = await this.aiQueue.getJob(jobId);
     if (!job) return { error: 'Job not found' };

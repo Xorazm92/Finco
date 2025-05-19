@@ -38,9 +38,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (username: string, password: string) => {
     try {
       const res = await loginApi(username, password);
-      if (res.access_token) {
-        setToken(res.access_token);
-        localStorage.setItem('token', res.access_token);
+      // Accept both 'token' and 'access_token' for compatibility
+      const receivedToken = res.token || res.access_token;
+      if (receivedToken) {
+        setToken(receivedToken);
+        localStorage.setItem('token', receivedToken);
         setUser(res.user || { username });
         return true;
       }

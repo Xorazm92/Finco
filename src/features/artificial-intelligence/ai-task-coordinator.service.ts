@@ -18,7 +18,18 @@ export class AiTaskCoordinatorService {
   async analyzeSentiment(text: string): Promise<any> {
     const prompt = this.promptManager.getPrompt('sentiment', { text });
     const response = await this.llmClient.generate(prompt);
-    // Try to parse as JSON, fallback to raw text extraction
+    return this.responseParser.parseJson(response) || this.responseParser.extractFromText(response);
+  }
+
+  async analyzeQuestion(text: string): Promise<any> {
+    const prompt = this.promptManager.getPrompt('question_analysis', { text });
+    const response = await this.llmClient.generate(prompt);
+    return this.responseParser.parseJson(response) || this.responseParser.extractFromText(response);
+  }
+
+  async analyzeReply(question: string, answer: string): Promise<any> {
+    const prompt = this.promptManager.getPrompt('reply_analysis', { question, answer });
+    const response = await this.llmClient.generate(prompt);
     return this.responseParser.parseJson(response) || this.responseParser.extractFromText(response);
   }
 }

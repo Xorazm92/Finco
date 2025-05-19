@@ -1,0 +1,9 @@
+# Qwen-Ozbek Question Analysis Prompt
+Berilgan matn (Telegram xabari) savolmi yoki yo‘qligini aniqlang va quyidagilarni JSON formatda qaytaring:
+{
+  "is_question": <true/false>,
+  "question_type": "open/closed/other",
+  "main_topic": "..."
+}
+Matn: {{text}}
+Natijani faqat JSON ko'rinishida qaytar!

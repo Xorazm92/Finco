@@ -1,0 +1,10 @@
+# Qwen-Ozbek Sentiment/Quality Prompt
+Berilgan matnni (Telegram xabari) analiz qilib, quyidagilarni JSON formatda qaytar:
+{
+  "relevance": <0-1 oralig'ida, 1 - juda dolzarb>,
+  "quality": <0-1 oralig'ida, 1 - juda aniq va to'liq>,
+  "is_question": <true/false>,
+  "main_topic": "..."
+}
+Matn: {{text}}
+Natijani faqat JSON ko'rinishida qaytar!

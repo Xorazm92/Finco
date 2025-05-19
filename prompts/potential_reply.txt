@@ -1,0 +1,13 @@
+# Qwen-Ozbek Potential Reply Prompt
+Quyidagi xabar oldingi savollarga javob bo‘lishi mumkinmi? Agar ha, qaysi savolga eng mos keladi va relevans/quality bahosini bering. Natijani JSON ko‘rinishida qaytaring:
+{
+  "matched_question": "...",
+  "relevance": <0-1 oralig'ida>,
+  "quality": <0-1 oralig'ida>,
+  "main_topic": "..."
+}
+Savollar:
+{{questions}}
+Javob:
+{{answer}}
+Natijani faqat JSON ko'rinishida qaytar!

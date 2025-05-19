@@ -23,12 +23,52 @@ export class AiQueueProcessor {
         inputText: job.data.text,
         result,
         jobId: String(job.id),
-        llmModel: undefined, // future: pass model info
-        promptVersion: undefined, // future: prompt versioning
+        llmModel: undefined,
+        promptVersion: undefined,
       });
       return result;
     } catch (err) {
       this.logger.error('Sentiment job failed', err);
+      throw err;
+    }
+  }
+
+  @Process('question_analysis')
+  async handleQuestionAnalysisJob(job: Job<{ text: string }>) {
+    this.logger.log(`Processing question_analysis job: ${JSON.stringify(job.data)}`);
+    try {
+      const result = await this.aiTaskCoordinator.analyzeQuestion(job.data.text);
+      await this.aiAnalysisResultService.saveResult({
+        type: 'question_analysis',
+        inputText: job.data.text,
+        result,
+        jobId: String(job.id),
+        llmModel: undefined,
+        promptVersion: undefined,
+      });
+      return result;
+    } catch (err) {
+      this.logger.error('Question analysis job failed', err);
+      throw err;
+    }
+  }
+
+  @Process('reply_analysis')
+  async handleReplyAnalysisJob(job: Job<{ question: string, answer: string }>) {
+    this.logger.log(`Processing reply_analysis job: ${JSON.stringify(job.data)}`);
+    try {
+      const result = await this.aiTaskCoordinator.analyzeReply(job.data.question, job.data.answer);
+      await this.aiAnalysisResultService.saveResult({
+        type: 'reply_analysis',
+        inputText: JSON.stringify(job.data),
+        result,
+        jobId: String(job.id),
+        llmModel: undefined,
+        promptVersion: undefined,
+      });
+      return result;
+    } catch (err) {
+      this.logger.error('Reply analysis job failed', err);
       throw err;
     }
   }

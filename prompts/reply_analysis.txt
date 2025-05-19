@@ -1,0 +1,11 @@
+# Qwen-Ozbek Reply Analysis Prompt
+Quyidagi javob xabari oldingi savolga qanchalik dolzarb va sifatli javob bo‘lganini tahlil qiling. Quyidagilarni JSON ko‘rinishida qaytaring:
+{
+  "relevance": <0-1 oralig'ida, 1 - juda dolzarb>,
+  "quality": <0-1 oralig'ida, 1 - juda aniq va to'liq>,
+  "answer_type": "direct/indirect/irrelevant",
+  "main_topic": "..."
+}
+Savol: {{question}}
+Javob: {{answer}}
+Natijani faqat JSON ko'rinishida qaytar!

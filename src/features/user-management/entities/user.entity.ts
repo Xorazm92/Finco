@@ -21,6 +21,9 @@ export class UserEntity {
   @Column({ name: 'username', type: 'varchar', length: 100, unique: true, nullable: true })
   username?: string;
 
+  @Column({ name: 'password', type: 'varchar', length: 255, nullable: true })
+  password?: string;
+
   // Guruh rollari endi alohida UserChatRoleEntity da saqlanadi
   @OneToMany(() => UserChatRoleEntity, (ucr) => ucr.user)
   chatRoles: UserChatRoleEntity[];

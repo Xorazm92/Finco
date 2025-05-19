@@ -1,9 +1,28 @@
 import { Module, Global } from '@nestjs/common';
-import { TelegramBotProvider } from './telegram.provider';
+import { TelegrafModule } from 'nestjs-telegraf';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { TelegramController } from './telegram.controller';
+import { TelegramService } from './telegram.service';
+import { UserService } from '../user-management/user.service';
 
 @Global()
 @Module({
-  providers: [TelegramBotProvider],
-  exports: [TelegramBotProvider],
+  imports: [
+    ConfigModule,
+    TelegrafModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => {
+        const token = configService.get<string>('TELEGRAM_BOT_TOKEN');
+        if (!token) {
+          throw new Error('TELEGRAM_BOT_TOKEN is not defined in .env file');
+        }
+        return { token };
+      },
+      inject: [ConfigService],
+    }),
+  ],
+  controllers: [TelegramController],
+  providers: [TelegramService, UserService],
+  exports: [TelegramService],
 })
 export class TelegramModule {}

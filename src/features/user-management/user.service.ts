@@ -139,12 +139,17 @@ export class UserService {
         throw new BadRequestException('Bunday Telegram ID allaqachon mavjud');
       }
     }
-    // No password check, just create user
+    // Parolni hash qilish
+    let hashedPassword = undefined;
+    if (userData.password) {
+      hashedPassword = await bcrypt.hash(userData.password, 10);
+    }
     const user = this.userRepository.create({
       telegramId: userData.telegramId,
       firstName: userData.firstName,
       lastName: userData.lastName,
       username: userData.username,
+      password: hashedPassword,
       isActive: true,
     });
     const savedUser = await this.userRepository.save(user);
@@ -189,9 +194,11 @@ export class UserService {
     fs.appendFileSync('diagnostic.log', `VALIDATE USER: ${username} ${password}\n`);
     const user = await this.userRepository.findOne({ where: { username } });
     fs.appendFileSync('diagnostic.log', `FOUND USER: ${JSON.stringify(user)}\n`);
-    // Password check removed; just return user if found
-    if (user) {
-      return user;
+    if (user && user.password) {
+      const isMatch = await bcrypt.compare(password, user.password);
+      if (isMatch) {
+        return user;
+      }
     }
     return null;
   }
