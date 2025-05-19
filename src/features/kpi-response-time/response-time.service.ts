@@ -5,6 +5,7 @@ import { MessageLogEntity, MessageStatus } from './entities/message-log.entity';
 import { UserEntity } from '../user-management/entities/user.entity';
 import { UserRole } from '../../shared/enums/user-role.enum';
 import { KPI_CONFIG } from '../../config/kpi.config';
+import { UserService } from '../user-management/user.service';
 
 @Injectable()
 export class ResponseTimeService {
@@ -13,6 +14,7 @@ export class ResponseTimeService {
     private readonly messageLogRepo: Repository<MessageLogEntity>,
     @InjectRepository(UserEntity)
     private readonly userRepo: Repository<UserEntity>,
+    private readonly userService: UserService,
   ) {}
 
   // Kalit so'zlarni ajratish
@@ -44,31 +46,32 @@ export class ResponseTimeService {
     let user = await this.userRepo.findOne({
       where: {
         telegramId: String(message.from.id),
-        
       },
     });
     if (!user) {
       user = this.userRepo.create({
         telegramId: String(message.from.id),
-        
         firstName: message.from.first_name,
         lastName: message.from.last_name ?? undefined,
         username: message.from.username ?? undefined,
-        role: UserRole.CLIENT,
         isActive: true,
       } as Partial<UserEntity>);
       await this.userRepo.save(user);
     }
     // Savol aniqlash
+    const userRoleInChat = await this.userService.getUserRole(
+      String(message.from.id),
+      String(message.chat.id)
+    );
     const isClientQuestion =
-      user.role === UserRole.CLIENT && this.isLikelyQuestion(message.text);
+      userRoleInChat === UserRole.CLIENT && this.isLikelyQuestion(message.text);
     const questionKeywords = this.extractKeywords(message.text);
     // MessageLogEntity yaratish
     const log = this.messageLogRepo.create({
       telegramMessageId: String(message.message_id),
       telegramChatId: String(message.chat.id),
       senderUser: user,
-      senderRoleAtMoment: user.role,
+      senderRoleAtMoment: userRoleInChat ?? undefined,
       sentAt: new Date(message.date * 1000),
       textPreview: message.text?.slice(0, 255),
       isClientQuestion,
@@ -84,7 +87,7 @@ export class ResponseTimeService {
     if (
       message.reply_to_message &&
       [UserRole.ACCOUNTANT, UserRole.BANK_CLIENT, UserRole.SUPERVISOR].includes(
-        user.role,
+        (userRoleInChat ?? UserRole.CLIENT)
       )
     ) {
       const original = await this.messageLogRepo.findOne({
@@ -99,7 +102,7 @@ export class ResponseTimeService {
         const responseTime =
           (log.sentAt.getTime() - original.sentAt.getTime()) / 1000;
         original.replyByUser = user;
-        original.replyByRoleAtMoment = user.role;
+        original.replyByRoleAtMoment = userRoleInChat ?? undefined;
         original.repliedAt = log.sentAt;
         original.responseTimeSeconds = Math.round(responseTime);
         original.replyMessageId = log.telegramMessageId;
@@ -114,7 +117,7 @@ export class ResponseTimeService {
     // Reply-siz (vaqt oynasi + keyword) javob aniqlash
     if (
       [UserRole.ACCOUNTANT, UserRole.BANK_CLIENT, UserRole.SUPERVISOR].includes(
-        user.role,
+        (userRoleInChat ?? UserRole.CLIENT)
       )
     ) {
       const T_window = KPI_CONFIG.RESPONSE_TIME_WINDOW_MS;
@@ -135,7 +138,7 @@ export class ResponseTimeService {
         const q = candidates[0];
         const responseTime = (log.sentAt.getTime() - q.sentAt.getTime()) / 1000;
         q.replyByUser = user;
-        q.replyByRoleAtMoment = user.role;
+        q.replyByRoleAtMoment = userRoleInChat ?? undefined;
         q.repliedAt = log.sentAt;
         q.responseTimeSeconds = Math.round(responseTime);
         q.replyMessageId = log.telegramMessageId;
@@ -161,7 +164,7 @@ export class ResponseTimeService {
           const responseTime =
             (log.sentAt.getTime() - bestMatch.sentAt.getTime()) / 1000;
           bestMatch.replyByUser = user;
-          bestMatch.replyByRoleAtMoment = user.role;
+          bestMatch.replyByRoleAtMoment = userRoleInChat ?? undefined;
           bestMatch.repliedAt = log.sentAt;
           bestMatch.responseTimeSeconds = Math.round(responseTime);
           bestMatch.replyMessageId = log.telegramMessageId;

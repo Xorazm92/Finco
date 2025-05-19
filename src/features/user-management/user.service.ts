@@ -8,6 +8,81 @@ import * as bcrypt from 'bcryptjs';
 
 @Injectable()
 export class UserService {
+  // TODO: ConfigService dan ADMIN_TELEGRAM_ID olish uchun inject qiling (agar kerak bo‘lsa)
+
+  /**
+   * Telegramdan kelgan xabar orqali userni avtomatik ro‘yxatga olish va chat uchun rol biriktirish.
+   * @param message Telegram xabari (node-telegram-bot-api Message)
+   * @param defaultRoleInChat Standart rol (masalan, CLIENT)
+   * @returns user, userChatRole, isNewUser, isNewRoleInChat
+   */
+  async findOrCreateUserFromTelegramContext(
+    message: any, // TelegramBot.Message
+    defaultRoleInChat: UserRole = UserRole.CLIENT,
+  ): Promise<{ user: UserEntity; userChatRole: UserChatRoleEntity; isNewUser: boolean; isNewRoleInChat: boolean }> {
+    const telegramUser = message.from;
+    const chatId = message.chat.id;
+    if (!telegramUser) throw new Error('Telegram user data not found in context.');
+    let user = await this.userRepository.findOne({ where: { telegramId: String(telegramUser.id) }, relations: ['chatRoles'] });
+    let isNewUser = false;
+    if (!user) {
+      user = this.userRepository.create({
+        telegramId: String(telegramUser.id),
+        firstName: telegramUser.first_name,
+        lastName: telegramUser.last_name,
+        username: telegramUser.username,
+        
+        isActive: true,
+        
+        chatRoles: [],
+      });
+      await this.userRepository.save(user);
+      isNewUser = true;
+      // TODO: ADMINga yangi foydalanuvchi haqida xabar yuborish (TelegramService orqali)
+    }
+    let userChatRole = user.chatRoles?.find(cr => cr.chatId == chatId);
+    let isNewRoleInChat = false;
+    if (!userChatRole) {
+      userChatRole = this.userChatRoleRepository.create({
+        user: user,
+        userId: user.id,
+        chatId: String(chatId),
+        role: defaultRoleInChat,
+      });
+      await this.userChatRoleRepository.save(userChatRole);
+      user.chatRoles?.push(userChatRole);
+      isNewRoleInChat = true;
+      // TODO: ADMINga yangi chat uchun rol tayinlangani haqida xabar yuborish
+    }
+    return { user, userChatRole, isNewUser, isNewRoleInChat };
+  }
+
+  /**
+   * ADMIN tomonidan userga chat uchun rol tayinlash
+   */
+  async assignRoleToUser(
+    adminTelegramId: string, // kim tayinlayapti
+    targetTelegramId: string,
+    chatId: string,
+    role: UserRole,
+  ): Promise<UserChatRoleEntity> {
+    const targetUser = await this.userRepository.findOne({ where: { telegramId: String(targetTelegramId) }, relations: ['chatRoles'] });
+    if (!targetUser) throw new NotFoundException(`User with Telegram ID ${targetTelegramId} not found.`);
+    let userChatRole = targetUser.chatRoles?.find(cr => cr.chatId == chatId);
+    if (userChatRole) {
+      userChatRole.role = role;
+    } else {
+      userChatRole = this.userChatRoleRepository.create({
+        user: targetUser,
+        userId: targetUser.id,
+        chatId: String(chatId),
+        role: role,
+      });
+    }
+    await this.userChatRoleRepository.save(userChatRole);
+    // TODO: ADMINga log yoki bildirishnoma yuborish (TelegramService orqali)
+    return userChatRole;
+  }
   constructor(
     @InjectRepository(UserEntity)
     private readonly userRepository: Repository<UserEntity>,
@@ -22,7 +97,7 @@ export class UserService {
   async findOne(id: number): Promise<UserEntity> {
     const user = await this.userRepository.findOne({ where: { id } });
     if (!user) throw new NotFoundException('Foydalanuvchi topilmadi');
-    const { password, ...rest } = user;
+    const rest = user;
     return rest as UserEntity;
   }
 
@@ -64,22 +139,16 @@ export class UserService {
         throw new BadRequestException('Bunday Telegram ID allaqachon mavjud');
       }
     }
-    if (!userData.password) {
-      throw new BadRequestException('Parol majburiy');
-    }
-    const hashedPassword = await bcrypt.hash(userData.password, 10);
+    // No password check, just create user
     const user = this.userRepository.create({
       telegramId: userData.telegramId,
       firstName: userData.firstName,
       lastName: userData.lastName,
       username: userData.username,
-      password: hashedPassword,
       isActive: true,
-      role: userData.role ?? UserRole.CLIENT,
     });
     const savedUser = await this.userRepository.save(user);
-    const { password, ...rest } = savedUser;
-    return rest as UserEntity;
+    return savedUser;
   }
 
   async assignRoleToUserInChat(
@@ -89,11 +158,16 @@ export class UserService {
     assignedBy?: string,
   ): Promise<UserChatRoleEntity> {
     let userChatRole = await this.userChatRoleRepository.findOne({ where: { userId, chatId } });
+    let assignedByUserIdNum: number | undefined = undefined;
+    if (assignedBy) {
+      const assignedByUser = await this.userRepository.findOne({ where: { telegramId: String(assignedBy) } });
+      if (assignedByUser) assignedByUserIdNum = assignedByUser.id;
+    }
     if (!userChatRole) {
-      userChatRole = this.userChatRoleRepository.create({ userId, chatId, role, assignedBy });
+      userChatRole = this.userChatRoleRepository.create({ userId: Number(userId), chatId: String(chatId), role, assignedByUserId: assignedByUserIdNum });
     } else {
       userChatRole.role = role;
-      if (assignedBy) userChatRole.assignedBy = assignedBy;
+      if (assignedByUserIdNum !== undefined) userChatRole.assignedByUserId = assignedByUserIdNum;
     }
     return this.userChatRoleRepository.save(userChatRole);
   }
@@ -115,10 +189,9 @@ export class UserService {
     fs.appendFileSync('diagnostic.log', `VALIDATE USER: ${username} ${password}\n`);
     const user = await this.userRepository.findOne({ where: { username } });
     fs.appendFileSync('diagnostic.log', `FOUND USER: ${JSON.stringify(user)}\n`);
-    if (user && user.password && await bcrypt.compare(password, user.password)) {
-      // Parolni javobdan olib tashlash
-      const { password, ...rest } = user;
-      return rest as UserEntity;
+    // Password check removed; just return user if found
+    if (user) {
+      return user;
     }
     return null;
   }
@@ -129,13 +202,9 @@ export class UserService {
   async updateUser(id: number, dto: Partial<UserEntity>): Promise<UserEntity> {
     const user = await this.userRepository.findOne({ where: { id } });
     if (!user) throw new NotFoundException('Foydalanuvchi topilmadi');
-    if (dto.password) {
-      dto.password = await bcrypt.hash(dto.password, 10);
-    }
     Object.assign(user, dto);
     await this.userRepository.save(user);
-    const { password, ...rest } = user;
-    return rest as UserEntity;
+    return user;
   }
 
   /**

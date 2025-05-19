@@ -24,8 +24,8 @@ export class UserChatRoleEntity {
   })
   role: UserRole;
 
-  @Column({ name: 'assigned_by', type: 'bigint', nullable: true })
-  assignedBy?: string;
+  @Column({ name: 'assigned_by_user_id', type: 'int', nullable: true })
+  assignedByUserId?: number;
 
   @CreateDateColumn({ name: 'assigned_at' })
   assignedAt: Date;

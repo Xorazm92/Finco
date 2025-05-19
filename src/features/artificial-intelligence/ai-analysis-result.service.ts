@@ -2,13 +2,17 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { AiAnalysisResultEntity } from './entities/ai-analysis-result.entity';
+// TODO: LlmClient import pathni to'g'ri belgilang yoki faylni yarating
+// import { LlmClient } from '../llm/llm.client';
 
 @Injectable()
 export class AiAnalysisResultService {
   constructor(
     @InjectRepository(AiAnalysisResultEntity)
     private readonly resultRepo: Repository<AiAnalysisResultEntity>,
+
   ) {}
+
 
   async saveResult(data: Partial<AiAnalysisResultEntity>) {
     const entity = this.resultRepo.create(data);
@@ -30,4 +34,6 @@ export class AiAnalysisResultService {
   async countAll() {
     return this.resultRepo.count();
   }
+
+
 }

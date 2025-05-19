@@ -169,7 +169,8 @@ export class TelegramUpdate {
     const userId = ctx.from?.id ? await this.userService.getUserIdByTelegram(ctx.from.id) : null;
     if (!userId) return ctx.reply('Foydalanuvchi topilmadi.');
     const user = await this.userService.findOne(userId);
-    if (!user || !['ADMIN', 'SUPERVISOR'].includes(user.role)) return ctx.reply('Ruxsat yo‘q.');
+    const userRole = ctx.chat && user ? await this.userService.getUserRole(user.telegramId, String(ctx.chat.id)) : null;
+    if (!user || !userRole || !['ADMIN', 'SUPERVISOR'].includes(String(userRole))) return ctx.reply('Ruxsat yo‘q.');
     const logs = await this.auditLogService.getLastLogs(10);
     if (!logs.length) return ctx.reply('Audit loglar topilmadi.');
     let msg = 'Oxirgi 10 audit log:\n';

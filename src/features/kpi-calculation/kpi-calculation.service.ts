@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { KpiScoreEntity } from './entities/kpi-score.entity';
@@ -131,7 +131,14 @@ export class KpiCalculationService {
    * @param periodEnd
    */
   async calculateResponseTimeKpisForUser(userId: number, periodStart: Date, periodEnd: Date) {
-    const user = await this.userRepo.findOne({ where: { id: userId } });
+    const user = await this.userRepo.findOne({ 
+      where: { id: userId },
+      relations: ['messageLog', 'reportLog', 'attendanceLog']
+    });
+    
+    if (!user) {
+      throw new NotFoundException('Foydalanuvchi topilmadi');
+    }
     if (!user) return;
 
     // MessageLogEntity repository ni inject qilamiz

@@ -56,7 +56,7 @@ export class UserController {
       firstName: dto.firstName,
       lastName: dto.lastName,
       username: dto.username,
-      role: dto.role ? (UserRole as any)[dto.role as any] ?? UserRole.CLIENT : UserRole.CLIENT,
+      
     };
     return this.userService.createOrUpdate(userData);
   }

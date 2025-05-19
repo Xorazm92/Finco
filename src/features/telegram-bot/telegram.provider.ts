@@ -66,10 +66,11 @@ export class TelegramBotProvider implements OnModuleInit {
     try {
       const caller = await this.userService.findByTelegramId(telegramId);
       if (!caller) {
-        await this.bot.sendMessage(msg.chat.id, 'Siz ro‘yxatdan o‘tmagansiz! Avval /register yuboring.');
+        await this.bot.sendMessage(msg.chat.id, 'Siz ro‘yxatdan o‘tmagansiz! Avval  yuboring.');
         return;
       }
-      if (!['SUPERVISOR', 'ADMIN'].includes(caller.role)) {
+      const callerRole = await this.userService.getUserRole(caller.telegramId, String(msg.chat.id));
+      if (!callerRole || !['SUPERVISOR', 'ADMIN'].includes(String(callerRole))) {
         await this.bot.sendMessage(msg.chat.id, 'Bu buyruq faqat SUPERVISOR yoki ADMIN uchun!');
         return;
       }
@@ -116,7 +117,8 @@ export class TelegramBotProvider implements OnModuleInit {
         await this.bot.sendMessage(msg.chat.id, `Siz ro'yxatdan o'tmagansiz! Avval /register yuboring.`);
         return;
       }
-      if (!['SUPERVISOR', 'ADMIN'].includes(caller.role)) {
+      const callerRole = await this.userService.getUserRole(caller.telegramId, String(msg.chat.id));
+      if (!callerRole || !['SUPERVISOR', 'ADMIN'].includes(String(callerRole))) {
         await this.bot.sendMessage(msg.chat.id, 'Bu buyruq faqat SUPERVISOR yoki ADMIN uchun!');
         return;
       }
@@ -143,6 +145,33 @@ export class TelegramBotProvider implements OnModuleInit {
   private initHandlers() {
     this.bot.onText(/\/start/, async (msg) => {
       await this.bot.sendMessage(msg.chat.id, 'Assalomu alaykum! FinCo KPI botga xush kelibsiz.');
+    });
+
+    // /register command
+    this.bot.onText(/\/register/, async (msg) => {
+      const telegramId = String(msg.from?.id);
+      try {
+        const existing = await this.userService.findByTelegramId(telegramId);
+        if (existing) {
+          await this.bot.sendMessage(msg.chat.id, 'Siz allaqachon ro‘yxatdan o‘tgansiz!');
+          return;
+        }
+        // Generate a random password (user may never use it)
+        const randomPassword = Math.random().toString(36).slice(-8);
+        const userData = {
+          telegramId,
+          firstName: msg.from?.first_name || '',
+          lastName: msg.from?.last_name || '',
+          username: msg.from?.username || '',
+          password: randomPassword,
+          role: UserRole.CLIENT,
+        };
+        await this.userService.createOrUpdate(userData);
+        await this.bot.sendMessage(msg.chat.id, '✅ Ro‘yxatdan o‘tish muvaffaqiyatli yakunlandi! Endi barcha buyruqlardan foydalanishingiz mumkin.');
+      } catch (err) {
+        this.logger?.error?.('Register error', err);
+        await this.bot.sendMessage(msg.chat.id, `❌ Ro‘yxatdan o‘tishda xatolik: ${(err && err.message) || 'Noma’lum xato'}`);
+      }
     });
 
     // /kpi command
@@ -229,7 +258,8 @@ export class TelegramBotProvider implements OnModuleInit {
           await this.bot.sendMessage(msg.chat.id, 'Siz ro‘yxatdan o‘tmagansiz! Avval /register yuboring.');
           return;
         }
-        if (!['SUPERVISOR', 'ADMIN'].includes(caller.role)) {
+        const callerRole = await this.userService.getUserRole(caller.telegramId, String(msg.chat.id));
+      if (!callerRole || !['SUPERVISOR', 'ADMIN'].includes(String(callerRole))) {
           await this.bot.sendMessage(msg.chat.id, 'Bu buyruq faqat SUPERVISOR yoki ADMIN uchun!');
           return;
         }
@@ -271,7 +301,8 @@ export class TelegramBotProvider implements OnModuleInit {
           await this.bot.sendMessage(msg.chat.id, 'Siz ro‘yxatdan o‘tmagansiz! Avval /register yuboring.');
           return;
         }
-        if (!['SUPERVISOR', 'ADMIN'].includes(caller.role)) {
+        const callerRole = await this.userService.getUserRole(caller.telegramId, String(msg.chat.id));
+      if (!callerRole || !['SUPERVISOR', 'ADMIN'].includes(String(callerRole))) {
           await this.bot.sendMessage(msg.chat.id, 'Bu buyruq faqat SUPERVISOR yoki ADMIN uchun!');
           return;
         }
@@ -312,7 +343,8 @@ export class TelegramBotProvider implements OnModuleInit {
           await this.bot.sendMessage(msg.chat.id, 'Siz ro‘yxatdan o‘tmagansiz! Avval /register yuboring.');
           return;
         }
-        if (!['SUPERVISOR', 'ADMIN'].includes(caller.role)) {
+        const callerRole = await this.userService.getUserRole(caller.telegramId, String(msg.chat.id));
+      if (!callerRole || !['SUPERVISOR', 'ADMIN'].includes(String(callerRole))) {
           await this.bot.sendMessage(msg.chat.id, 'Bu buyruq faqat SUPERVISOR yoki ADMIN uchun!');
           return;
         }
@@ -357,7 +389,8 @@ export class TelegramBotProvider implements OnModuleInit {
           await this.bot.sendMessage(msg.chat.id, 'Siz ro‘yxatdan o‘tmagansiz! Avval /register yuboring.');
           return;
         }
-        if (!['SUPERVISOR', 'ADMIN'].includes(caller.role)) {
+        const callerRole = await this.userService.getUserRole(caller.telegramId, String(msg.chat.id));
+      if (!callerRole || !['SUPERVISOR', 'ADMIN'].includes(String(callerRole))) {
           await this.bot.sendMessage(msg.chat.id, 'Bu buyruq faqat SUPERVISOR yoki ADMIN uchun!');
           return;
         }
@@ -394,7 +427,8 @@ export class TelegramBotProvider implements OnModuleInit {
           await this.bot.sendMessage(msg.chat.id, 'Siz ro‘yxatdan o‘tmagansiz! Avval /register yuboring.');
           return;
         }
-        if (!['SUPERVISOR', 'ADMIN'].includes(caller.role)) {
+        const callerRole = await this.userService.getUserRole(caller.telegramId, String(msg.chat.id));
+      if (!callerRole || !['SUPERVISOR', 'ADMIN'].includes(String(callerRole))) {
           await this.bot.sendMessage(msg.chat.id, 'Bu buyruq faqat SUPERVISOR yoki ADMIN uchun!');
           return;
         }
@@ -431,7 +465,8 @@ export class TelegramBotProvider implements OnModuleInit {
           await this.bot.sendMessage(msg.chat.id, 'Siz ro‘yxatdan o‘tmagansiz! Avval /register yuboring.');
           return;
         }
-        if (!['SUPERVISOR', 'ADMIN'].includes(caller.role)) {
+        const callerRole = await this.userService.getUserRole(caller.telegramId, String(msg.chat.id));
+      if (!callerRole || !['SUPERVISOR', 'ADMIN'].includes(String(callerRole))) {
           await this.bot.sendMessage(msg.chat.id, 'Bu buyruq faqat SUPERVISOR yoki ADMIN uchun!');
           return;
         }
@@ -473,7 +508,8 @@ export class TelegramBotProvider implements OnModuleInit {
           await this.bot.sendMessage(msg.chat.id, 'Siz ro‘yxatdan o‘tmagansiz! Avval /register yuboring.');
           return;
         }
-        if (!['SUPERVISOR', 'ADMIN'].includes(caller.role)) {
+        const callerRole = await this.userService.getUserRole(caller.telegramId, String(msg.chat.id));
+      if (!callerRole || !['SUPERVISOR', 'ADMIN'].includes(String(callerRole))) {
           await this.bot.sendMessage(msg.chat.id, 'Bu buyruq faqat SUPERVISOR yoki ADMIN uchun!');
           return;
         }
@@ -509,7 +545,8 @@ export class TelegramBotProvider implements OnModuleInit {
           await this.bot.sendMessage(msg.chat.id, 'Siz ro‘yxatdan o‘tmagansiz! Avval /register yuboring.');
           return;
         }
-        if (!['SUPERVISOR', 'ADMIN'].includes(caller.role)) {
+        const callerRole = await this.userService.getUserRole(caller.telegramId, String(msg.chat.id));
+      if (!callerRole || !['SUPERVISOR', 'ADMIN'].includes(String(callerRole))) {
           await this.bot.sendMessage(msg.chat.id, 'Bu buyruq faqat SUPERVISOR yoki ADMIN uchun!');
           return;
         }
@@ -542,7 +579,8 @@ export class TelegramBotProvider implements OnModuleInit {
           await this.bot.sendMessage(msg.chat.id, 'Siz ro‘yxatdan o‘tmagansiz! Avval /register yuboring.');
           return;
         }
-        if (!['SUPERVISOR', 'ADMIN'].includes(caller.role)) {
+        const callerRole = await this.userService.getUserRole(caller.telegramId, String(msg.chat.id));
+      if (!callerRole || !['SUPERVISOR', 'ADMIN'].includes(String(callerRole))) {
           await this.bot.sendMessage(msg.chat.id, 'Bu buyruq faqat SUPERVISOR yoki ADMIN uchun!');
           return;
         }
@@ -574,7 +612,8 @@ export class TelegramBotProvider implements OnModuleInit {
           await this.bot.sendMessage(msg.chat.id, 'Siz ro‘yxatdan o‘tmagansiz! Avval /register yuboring.');
           return;
         }
-        if (!['SUPERVISOR', 'ADMIN'].includes(caller.role)) {
+        const callerRole = await this.userService.getUserRole(caller.telegramId, String(msg.chat.id));
+      if (!callerRole || !['SUPERVISOR', 'ADMIN'].includes(String(callerRole))) {
           await this.bot.sendMessage(msg.chat.id, 'Bu buyruq faqat SUPERVISOR yoki ADMIN uchun!');
           return;
         }
@@ -605,12 +644,12 @@ export class TelegramBotProvider implements OnModuleInit {
       if (!msg.chat || (msg.chat.type !== 'group' && msg.chat.type !== 'supergroup')) return;
       try {
         const user = await this.userService.findByTelegramId(String(msg.from?.id));
-        const senderRole = user?.role || 'UNKNOWN';
+        const senderRole = (user ? await this.userService.getUserRole(user.telegramId, String(msg.chat.id)) : 'UNKNOWN') || 'UNKNOWN';
         await this.messageLogService.logMessage({
           telegramMessageId: msg.message_id,
           telegramChatId: msg.chat.id,
           senderTelegramId: String(msg.from?.id),
-          senderRoleAtMoment: user?.role || 'UNKNOWN',
+          senderRoleAtMoment: (user ? await this.userService.getUserRole(user.telegramId, String(msg.chat.id)) : 'UNKNOWN') || 'UNKNOWN',
           sentAt: new Date(msg.date * 1000),
           textContent: msg.text,
           isReplyToMessageId: msg.reply_to_message?.message_id,

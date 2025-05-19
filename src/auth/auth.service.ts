@@ -16,7 +16,8 @@ export class AuthService {
     const user = await this.userService.validateUser(username, password);
     fs.appendFileSync('diagnostic.log', `LOGIN USER RESULT: ${JSON.stringify(user)}\n`);
     if (!user) throw new UnauthorizedException('Login yoki parol noto‘g‘ri.');
-    const payload = { sub: user.id, username: user.username, role: user.role };
+    // Fetch role from chat context if needed; here we omit role from payload
+    const payload = { sub: user.id, username: user.username };
     fs.appendFileSync('diagnostic.log', `JWT PAYLOAD: ${JSON.stringify(payload)}\n`);
     let token: string;
     try {
@@ -31,7 +32,7 @@ export class AuthService {
       user: {
         id: user.id,
         username: user.username,
-        role: user.role,
+        // role: user.role, // Removed as role is now chat-specific and not in UserEntity
       },
     };
   }

@@ -8,5 +8,10 @@ export default defineConfig({
     proxy: {
       '/api': 'http://localhost:3000',
     },
+    fs: {
+      strict: false,
+    },
+    // Agar kerak bo‘lsa, quyidagini ham qo‘shish mumkin:
+    // historyApiFallback: true,
   },
 });

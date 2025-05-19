@@ -5,6 +5,7 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 import DashboardLayout from './components/layout/DashboardLayout';
 import LoginPage from './pages/LoginPage';
 import HomePage from './pages/HomePage';
+import DashboardPage from './pages/DashboardPage';
 import UsersPage from './pages/UsersPage';
 import RolesPage from './pages/RolesPage';
 import KpiPage from './pages/KpiPage';
@@ -33,7 +34,7 @@ export default function App() {
               <DashboardLayout />
             </ProtectedRoute>
           }>
-            <Route index element={<HomePage />} />
+            <Route index element={<DashboardPage />} />
             <Route path="users" element={<UsersPage />} />
             <Route path="roles" element={<RolesPage />} />
             <Route path="kpi" element={<KpiPage />} />

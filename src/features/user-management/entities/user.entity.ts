@@ -18,21 +18,8 @@ export class UserEntity {
   lastName?: string;
 
   @Index({ unique: true })
-  @Column({ name: 'username', type: 'varchar', length: 100, unique: true, nullable: false })
-  username: string;
-
-  @Column({
-    type: 'enum',
-    enum: UserRole,
-    default: UserRole.CLIENT, // Agar bazada 'BANK_CLIENT' bo‘lsa, enum va defaultni moslashtiring
-  })
-  role: UserRole;
-
-  @Column({ name: 'password', type: 'varchar', length: 255, nullable: false })
-  password: string;
-
-  @Column({ name: 'chat_id', type: 'bigint', default: 0 })
-  chatId: string;
+  @Column({ name: 'username', type: 'varchar', length: 100, unique: true, nullable: true })
+  username?: string;
 
   // Guruh rollari endi alohida UserChatRoleEntity da saqlanadi
   @OneToMany(() => UserChatRoleEntity, (ucr) => ucr.user)
