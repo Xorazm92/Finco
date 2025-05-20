@@ -1,6 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, Index, OneToMany } from 'typeorm';
 import { UserChatRoleEntity } from './user-chat-role.entity';
 import { UserRole } from '../../../shared/enums/user-role.enum';
+import { UserCompanyAssignmentEntity } from '../../company/entities/user-company-assignment.entity';
 
 @Entity('users')
 export class UserEntity {
@@ -30,6 +31,12 @@ export class UserEntity {
 
   @Column({ name: 'is_active', type: 'boolean', default: true })
   isActive: boolean;
+
+  @Column({ name: 'base_salary', type: 'float', nullable: true })
+  baseSalary?: number;
+
+  @OneToMany(() => UserCompanyAssignmentEntity, assignment => assignment.user)
+  assignments: UserCompanyAssignmentEntity[];
 
   @Column({ name: 'created_at', type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;

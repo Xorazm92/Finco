@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Card, Progress, Row, Col, Statistic, Spin, Typography } from 'antd';
-
-const { Title } = Typography;
+import { Card, Typography, CircularProgress, Grid, Box } from '@mui/material';
 
 export const KpiDashboard: React.FC<{ telegramId: string }> = ({ telegramId }) => {
   const [kpi, setKpi] = useState<any>(null);
@@ -19,36 +17,48 @@ export const KpiDashboard: React.FC<{ telegramId: string }> = ({ telegramId }) =
       .finally(() => setLoading(false));
   }, [telegramId]);
 
-  if (loading) return <Spin size="large" style={{ display: 'block', margin: '80px auto' }} />;
-  if (error) return <div style={{ color: 'red' }}>KPI olishda xatolik: {error}</div>;
+  if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 10 }}><CircularProgress size={48} /></Box>;
+  if (error) return <Typography sx={{ color: 'red' }}>KPI olishda xatolik: {error}</Typography>;
   if (!kpi) return null;
 
   return (
     <div style={{ padding: 24 }}>
-      <Title level={2}>Foydalanuvchi KPI Dashboard</Title>
-      <Row gutter={[24, 24]}>
-        <Col xs={24} md={8}>
+      <Typography variant="h2">Foydalanuvchi KPI Dashboard</Typography>
+      <Grid container spacing={2}>
+        <Grid item xs={12} md={4}>
           <Card>
-            <Statistic title="Umumiy savollar" value={kpi.totalQuestions} />
-            <Statistic title="Javobsiz savollar (%)" value={kpi.unansweredPercent} suffix="%" />
-            <Statistic title="O'rtacha javob vaqti (sek)" value={kpi.avgResponseTimeSeconds ?? '-'} />
+            <Typography variant="body2">KPI o'rtacha: {kpi?.weekAvg?.toFixed(2)}</Typography>
+            <Typography variant="body1">Javobsiz savollar (%): {kpi.unansweredPercent}%</Typography>
+            <Typography variant="body1">O'rtacha javob vaqti (sek): {kpi.avgResponseTimeSeconds ?? '-'}</Typography>
           </Card>
-        </Col>
-        <Col xs={24} md={8}>
+        </Grid>
+        <Grid item xs={12} md={4}>
           <Card>
-            <Statistic title="Hisobotlar soni" value={kpi.totalReports} />
-            <Statistic title="Kechikkan hisobotlar (%)" value={kpi.lateReportsPercent} suffix="%" />
+            <Typography variant="body2">Hisobotlar soni: {kpi.totalReports}</Typography>
+            <Typography variant="body1">Kechikkan hisobotlar (%): {kpi.lateReportsPercent}%</Typography>
           </Card>
-        </Col>
-        <Col xs={24} md={8}>
+        </Grid>
+        <Grid item xs={12} md={4}>
           <Card>
-            <Title level={5}>Javobsiz savollar progress</Title>
-            <Progress percent={100 - kpi.unansweredPercent} status={kpi.unansweredPercent > 30 ? 'exception' : 'active'} />
-            <Title level={5}>Kechikkan hisobotlar progress</Title>
-            <Progress percent={100 - kpi.lateReportsPercent} status={kpi.lateReportsPercent > 30 ? 'exception' : 'active'} />
+            <Typography variant="body2">KPI trend: {kpi?.trend}</Typography>
+            <Typography variant="body1">Javobsiz savollar progress:</Typography>
+            <Box sx={{ width: '100%', mt: 1 }}>
+              <Typography variant="body2">Javobsiz savollar: {kpi.unansweredPercent}%</Typography>
+              <Box sx={{ bgcolor: '#eee', borderRadius: 1, height: 10, width: '100%' }}>
+                <Box sx={{ bgcolor: kpi.unansweredPercent > 30 ? 'error.main' : 'success.main', width: `${100 - kpi.unansweredPercent}%`, height: '100%', borderRadius: 1 }} />
+              </Box>
+            </Box>
+            <Typography variant="body1">Kechikkan hisobotlar progress:</Typography>
+            <Box sx={{ width: '100%', mt: 1 }}>
+              <Typography variant="body2">Kechikkan hisobotlar: {kpi.lateReportsPercent}%</Typography>
+              <Box sx={{ bgcolor: '#eee', borderRadius: 1, height: 10, width: '100%' }}>
+                <Box sx={{ bgcolor: kpi.lateReportsPercent > 30 ? 'error.main' : 'success.main', width: `${100 - kpi.lateReportsPercent}%`, height: '100%', borderRadius: 1 }} />
+              </Box>
+            </Box>
+            
           </Card>
-        </Col>
-      </Row>
+        </Grid>
+      </Grid>
     </div>
   );
 };

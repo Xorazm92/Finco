@@ -1,9 +1,34 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { PayrollReportTable } from '../payroll/PayrollReportTable';
 import { Outlet } from 'react-router-dom';
 import { Box, AppBar, Toolbar, Typography, Drawer, List, ListItem, ListItemText } from '@mui/material';
 
 // DashboardLayout faqat React layout va navigatsiyani o'z ichiga oladi
-export default function DashboardLayout() {
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  // Payroll report demo integration
+  const [payrollData, setPayrollData] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setLoading(true);
+    setError(null);
+    // Demo params; replace with real user selection
+    fetch('/payroll/report?userId=1&companyId=1&period=2025-05')
+      .then(res => {
+        if (!res.ok) throw new Error('API error');
+        return res.json();
+      })
+      .then(data => setPayrollData({
+        user: 'Aliyev Ali', // Demo; ideally fetch from user API
+        company: 'FinCo MCHJ',
+        period: '2025-05',
+        ...data,
+      }))
+      .catch(e => setError(e.message))
+      .finally(() => setLoading(false));
+  }, []);
+
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh' }}>
       <Drawer
@@ -44,7 +69,16 @@ export default function DashboardLayout() {
           </Toolbar>
         </AppBar>
         <Toolbar />
-        <Outlet />
+        <div>
+          {/* Payroll report demo block */}
+          <div style={{ margin: '32px 0' }}>
+            {loading && <div>Loading payroll report...</div>}
+            {error && <div style={{ color: 'red' }}>Error: {error}</div>}
+            {payrollData && <PayrollReportTable {...payrollData} />}
+          </div>
+          {/* Dashboard content here */}
+          {children}
+        </div>
       </Box>
     </Box>
   );
