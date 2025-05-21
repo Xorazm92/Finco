@@ -22,7 +22,10 @@ export class KpiService {
   }
 
   async findByUser(userId: number): Promise<KpiEntity[]> {
-    return this.kpiRepository.find({ where: { userId }, order: { createdAt: 'DESC' } });
+    return this.kpiRepository.find({
+      where: { userId },
+      order: { createdAt: 'DESC' },
+    });
   }
 
   async findById(id: number): Promise<KpiEntity | undefined> {
@@ -30,7 +33,13 @@ export class KpiService {
     return kpi ?? undefined;
   }
 
-  async updateKpi(id: number, value: number, comment?: string, performedBy?: number, reason?: string): Promise<KpiEntity | undefined> {
+  async updateKpi(
+    id: number,
+    value: number,
+    comment?: string,
+    performedBy?: number,
+    reason?: string,
+  ): Promise<KpiEntity | undefined> {
     const kpi = await this.findById(id);
     if (!kpi) return undefined;
     const oldValue = kpi.value;
@@ -51,7 +60,11 @@ export class KpiService {
     return updated;
   }
 
-  async deleteKpi(id: number, performedBy?: number, reason?: string): Promise<KpiEntity | undefined> {
+  async deleteKpi(
+    id: number,
+    performedBy?: number,
+    reason?: string,
+  ): Promise<KpiEntity | undefined> {
     const kpi = await this.findById(id);
     if (!kpi) return undefined;
     await this.kpiRepository.delete(id);

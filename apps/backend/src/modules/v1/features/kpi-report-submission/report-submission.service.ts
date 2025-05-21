@@ -32,12 +32,14 @@ export class ReportSubmissionService {
     const now = new Date();
     let deadlineAt: Date | undefined = undefined;
     if (reportType.deadlineMinutes) {
-      deadlineAt = new Date(now.getTime() + reportType.deadlineMinutes * 60 * 1000);
+      deadlineAt = new Date(
+        now.getTime() + reportType.deadlineMinutes * 60 * 1000,
+      );
     }
 
     // period aniqlash (masalan, har kuni yoki haftalik bo‘lsa, hozircha mock)
     const periodStartDate = now; // TODO: haqiqiy periodga moslashtirish
-    const periodEndDate = now;   // TODO: haqiqiy periodga moslashtirish
+    const periodEndDate = now; // TODO: haqiqiy periodga moslashtirish
 
     // status hisoblash
     let status = ReportStatus.PENDING;

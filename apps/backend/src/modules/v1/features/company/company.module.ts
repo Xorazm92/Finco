@@ -6,7 +6,9 @@ import { CompanyService } from './company.service';
 import { UserCompanyAssignmentService } from './user-company-assignment.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([CompanyEntity, UserCompanyAssignmentEntity])],
+  imports: [
+    TypeOrmModule.forFeature([CompanyEntity, UserCompanyAssignmentEntity]),
+  ],
   providers: [CompanyService, UserCompanyAssignmentService],
   exports: [CompanyService, UserCompanyAssignmentService],
 })

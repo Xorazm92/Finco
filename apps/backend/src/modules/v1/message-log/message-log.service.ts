@@ -8,7 +8,7 @@ export class MessageLogService {
   constructor(
     @InjectRepository(MessageLogEntity)
     private readonly messageLogRepo: Repository<MessageLogEntity>,
-  ) { }
+  ) {}
 
   async logMessage(data: Partial<MessageLogEntity>): Promise<MessageLogEntity> {
     // Savolni aniqlash: CLIENT va matnda ? yoki savol kalit so'zlari
@@ -21,7 +21,10 @@ export class MessageLogService {
     if (data.senderRoleAtMoment === 'CLIENT' && data.textContent) {
       const txt = data.textContent.trim();
       // Oddiy savol belgisi yoki kalit so'zlar
-      if (txt.endsWith('?') || /savol|question|\?$|\bkim\b|\bqachon\b|\bnega\b/i.test(txt)) {
+      if (
+        txt.endsWith('?') ||
+        /savol|question|\?$|\bkim\b|\bqachon\b|\bnega\b/i.test(txt)
+      ) {
         isQuestion = true;
       }
     }
@@ -30,13 +33,18 @@ export class MessageLogService {
     if (data.isReplyToMessageId) {
       // Bazadan reply qilingan xabarni topamiz
       const repliedMsg = await this.messageLogRepo.findOne({
-        where: { telegramMessageId: data.isReplyToMessageId, telegramChatId: data.telegramChatId },
+        where: {
+          telegramMessageId: data.isReplyToMessageId,
+          telegramChatId: data.telegramChatId,
+        },
       });
       if (repliedMsg && repliedMsg.isQuestion) {
         // Savolga javob berildi
         questionStatus = 'ANSWERED';
         answeredByMessageId = data.telegramMessageId!;
-        responseTimeSeconds = Math.floor((+new Date(data.sentAt!) - +new Date(repliedMsg.sentAt)) / 1000);
+        responseTimeSeconds = Math.floor(
+          (+new Date(data.sentAt!) - +new Date(repliedMsg.sentAt)) / 1000,
+        );
         answerDetectionMethod = 'reply';
         // Savol xabarini yangilaymiz
         repliedMsg.questionStatus = 'ANSWERED';
@@ -48,7 +56,12 @@ export class MessageLogService {
     }
 
     // SI asosidagi matching: reply bo'lmagan javoblar uchun
-    if (!data.isReplyToMessageId && ['ACCOUNTANT', 'BANK_CLIENT', 'BANK_CLIENT_SPECIALIST'].includes(data.senderRoleAtMoment || '')) {
+    if (
+      !data.isReplyToMessageId &&
+      ['ACCOUNTANT', 'BANK_CLIENT', 'BANK_CLIENT_SPECIALIST'].includes(
+        data.senderRoleAtMoment || '',
+      )
+    ) {
       // Oxirgi 10 ta javobsiz CLIENT savolini topamiz
       const recentQuestions = await this.messageLogRepo.find({
         where: {
@@ -61,12 +74,20 @@ export class MessageLogService {
       });
       if (recentQuestions.length && data.textContent) {
         // Eng yaxshi mos keladigan savolni topish (oddiy keyword overlap bilan)
-        const answerKeywords = (data.textContent || '').toLowerCase().split(/\W+/).filter(Boolean);
+        const answerKeywords = (data.textContent || '')
+          .toLowerCase()
+          .split(/\W+/)
+          .filter(Boolean);
         let bestMatch: MessageLogEntity | null = null;
         let bestScore = 0;
         for (const q of recentQuestions) {
-          const qKeywords = (q.textContent || '').toLowerCase().split(/\W+/).filter(Boolean);
-          const overlap = qKeywords.filter(k => answerKeywords.includes(k)).length;
+          const qKeywords = (q.textContent || '')
+            .toLowerCase()
+            .split(/\W+/)
+            .filter(Boolean);
+          const overlap = qKeywords.filter((k) =>
+            answerKeywords.includes(k),
+          ).length;
           if (overlap > bestScore) {
             bestScore = overlap;
             bestMatch = q;
@@ -74,7 +95,9 @@ export class MessageLogService {
         }
         // Agar overlap > 0 bo'lsa, matching deb hisoblaymiz
         if (bestMatch && bestScore > 0) {
-          const responseTimeSeconds = Math.floor((+new Date(data.sentAt!) - +new Date(bestMatch.sentAt)) / 1000);
+          const responseTimeSeconds = Math.floor(
+            (+new Date(data.sentAt!) - +new Date(bestMatch.sentAt)) / 1000,
+          );
           bestMatch.questionStatus = 'ANSWERED';
           bestMatch.answeredByMessageId = data.telegramMessageId!;
           bestMatch.responseTimeSeconds = responseTimeSeconds;
@@ -99,11 +122,15 @@ export class MessageLogService {
     message.isReplyToMessageId = data.isReplyToMessageId ?? null;
     message.hasAttachments = data.hasAttachments ?? false;
     message.attachmentType = data.attachmentType ?? null;
-    message.isQuestion = typeof data.isQuestion === 'boolean' ? data.isQuestion : isQuestion;
+    message.isQuestion =
+      typeof data.isQuestion === 'boolean' ? data.isQuestion : isQuestion;
     message.questionStatus = data.questionStatus ?? questionStatus;
-    message.answeredByMessageId = data.answeredByMessageId ?? answeredByMessageId;
-    message.responseTimeSeconds = data.responseTimeSeconds ?? responseTimeSeconds;
-    message.answerDetectionMethod = data.answerDetectionMethod ?? answerDetectionMethod ?? null;
+    message.answeredByMessageId =
+      data.answeredByMessageId ?? answeredByMessageId;
+    message.responseTimeSeconds =
+      data.responseTimeSeconds ?? responseTimeSeconds;
+    message.answerDetectionMethod =
+      data.answerDetectionMethod ?? answerDetectionMethod ?? null;
 
     return await this.messageLogRepo.save(message);
   }
@@ -116,18 +143,25 @@ export class MessageLogService {
     });
   }
 
-  async updateMessageLogTranscription(messageLogId: number | string, transcribedText: string): Promise<MessageLogEntity> {
-    const message = await this.messageLogRepo.findOne({ where: { id: Number(messageLogId) } });
+  async updateMessageLogTranscription(
+    messageLogId: number | string,
+    transcribedText: string,
+  ): Promise<MessageLogEntity> {
+    const message = await this.messageLogRepo.findOne({
+      where: { id: Number(messageLogId) },
+    });
     if (!message) {
       throw new Error(`MessageLog with ID ${messageLogId} not found.`);
     }
     // Update transcribedText (audio transcription)
     message.transcribed_text = transcribedText;
     // If message is VOICE type, also update textContent for searchability
-    if (message.attachmentType === 'VOICE' || message.attachmentType === 'AUDIO') {
+    if (
+      message.attachmentType === 'VOICE' ||
+      message.attachmentType === 'AUDIO'
+    ) {
       message.textContent = transcribedText;
     }
     return this.messageLogRepo.save(message);
   }
 }
-

@@ -15,10 +15,14 @@ export class PayrollService {
     penalties?: number;
   }) {
     const baseSalary = params.user.baseSalary || 0;
-    const salaryShare = (params.assignment.salaryPercentageFromCompany || 100) / 100;
+    const salaryShare =
+      (params.assignment.salaryPercentageFromCompany || 100) / 100;
     // KPI bonus calculation: sum weighted bonuses by definition
     let kpiBonus = 0;
-    const kpiBreakdown: Record<string, { value: number; weight: number; bonus: number }> = {};
+    const kpiBreakdown: Record<
+      string,
+      { value: number; weight: number; bonus: number }
+    > = {};
     if (params.kpiScores && params.kpiScores.length > 0) {
       for (const kpi of params.kpiScores) {
         // Each kpi should have kpiDefinition with weightInOverallKpi (as percent)

@@ -1,5 +1,11 @@
 import { Controller, Post, Body, Get, Param } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiParam,
+  ApiBody,
+} from '@nestjs/swagger';
 import { AiQueueService } from './ai-queue.service';
 
 @ApiTags('AI Queue')
@@ -12,8 +18,10 @@ export class AiQueueController {
   @ApiBody({
     schema: {
       example: { text: 'Bu xabarni analiz qiling.' },
-      properties: { text: { type: 'string', example: 'Bu xabarni analiz qiling.' } }
-    }
+      properties: {
+        text: { type: 'string', example: 'Bu xabarni analiz qiling.' },
+      },
+    },
   })
   @ApiResponse({ status: 201, description: 'Job queued' })
   async queueSentiment(@Body('text') text: string) {
@@ -31,4 +39,3 @@ export class AiQueueController {
     return this.aiQueueService.getJobResult(jobId);
   }
 }
-

@@ -40,7 +40,10 @@ export class BonusService {
   }
 
   async remove(id: number, performedBy?: number) {
-    const bonus = await this.bonusRepo.findOne({ where: { id }, relations: ['user', 'company'] });
+    const bonus = await this.bonusRepo.findOne({
+      where: { id },
+      relations: ['user', 'company'],
+    });
     const result = await this.bonusRepo.delete(id);
     if (bonus && bonus.user && bonus.company && bonus.amount) {
       await this.auditLogService.logBonus({

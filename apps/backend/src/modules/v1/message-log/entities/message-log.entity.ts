@@ -38,7 +38,12 @@ export class MessageLogEntity {
   @Column({ name: 'is_question', default: false })
   isQuestion: boolean;
 
-  @Column({ name: 'question_status', type: 'enum', enum: ['PENDING', 'ANSWERED', 'TIMEOUT'], default: 'PENDING' })
+  @Column({
+    name: 'question_status',
+    type: 'enum',
+    enum: ['PENDING', 'ANSWERED', 'TIMEOUT'],
+    default: 'PENDING',
+  })
   questionStatus: 'PENDING' | 'ANSWERED' | 'TIMEOUT';
 
   @Column({ name: 'answered_by_message_id', type: 'bigint', nullable: true })

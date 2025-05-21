@@ -47,7 +47,10 @@ export class ResponseTimeService {
     try {
       this.logger.log('processMessage called', message);
       // Userni bazaga qo‘shish yoki olish (chatId bo'yicha)
-      this.logger.debug('Looking up user in DB', { telegramId: message.from?.id, chatId: message.chat?.id });
+      this.logger.debug('Looking up user in DB', {
+        telegramId: message.from?.id,
+        chatId: message.chat?.id,
+      });
       let user = await this.userRepo.findOne({
         where: {
           telegramId: String(message.from.id),
@@ -66,10 +69,11 @@ export class ResponseTimeService {
       // Savol aniqlash
       const userRoleInChat = await this.userService.getUserRole(
         String(message.from.id),
-        String(message.chat.id)
+        String(message.chat.id),
       );
       const isClientQuestion =
-        userRoleInChat === UserRole.CLIENT && this.isLikelyQuestion(message.text);
+        userRoleInChat === UserRole.CLIENT &&
+        this.isLikelyQuestion(message.text);
       const questionKeywords = this.extractKeywords(message.text);
       // MessageLogEntity yaratish
       const log = this.messageLogRepo.create({
@@ -86,22 +90,24 @@ export class ResponseTimeService {
       // Reply orqali javob aniqlash
       if (
         message.reply_to_message &&
-        [UserRole.ACCOUNTANT, UserRole.BANK_CLIENT, UserRole.SUPERVISOR].includes(
-          (userRoleInChat ?? UserRole.CLIENT)
-        )
+        [
+          UserRole.ACCOUNTANT,
+          UserRole.BANK_CLIENT,
+          UserRole.SUPERVISOR,
+        ].includes(userRoleInChat ?? UserRole.CLIENT)
       ) {
         const original = await this.messageLogRepo.findOne({
           where: {
             telegramMessageId: message.reply_to_message.message_id,
             telegramChatId: message.chat.id,
-            questionStatus: "PENDING",
+            questionStatus: 'PENDING',
           },
         });
         if (original) {
           const responseTime =
             (log.sentAt.getTime() - original.sentAt.getTime()) / 1000;
           original.isReplyToMessageId = log.telegramMessageId;
-          original.questionStatus = "ANSWERED";
+          original.questionStatus = 'ANSWERED';
           original.responseTimeSeconds = Math.round(responseTime);
           await this.messageLogRepo.save(original);
         }
@@ -110,9 +116,11 @@ export class ResponseTimeService {
 
       // Reply-siz (vaqt oynasi + keyword) javob aniqlash
       if (
-        [UserRole.ACCOUNTANT, UserRole.BANK_CLIENT, UserRole.SUPERVISOR].includes(
-          (userRoleInChat ?? UserRole.CLIENT)
-        )
+        [
+          UserRole.ACCOUNTANT,
+          UserRole.BANK_CLIENT,
+          UserRole.SUPERVISOR,
+        ].includes(userRoleInChat ?? UserRole.CLIENT)
       ) {
         const T_window = KPI_CONFIG.RESPONSE_TIME_WINDOW_MS;
         const keywordMatchThreshold = KPI_CONFIG.KEYWORD_MATCH_THRESHOLD;
@@ -120,18 +128,20 @@ export class ResponseTimeService {
         const pendingQuestions = await this.messageLogRepo.find({
           where: {
             telegramChatId: message.chat.id,
-            questionStatus: "PENDING",
+            questionStatus: 'PENDING',
           },
         });
         const candidates = pendingQuestions.filter(
-          (q) => now > q.sentAt.getTime() && now - q.sentAt.getTime() <= T_window,
+          (q) =>
+            now > q.sentAt.getTime() && now - q.sentAt.getTime() <= T_window,
         );
         if (candidates.length === 1) {
           // Faqat bitta savol - avtomatik bog'lash
           const q = candidates[0];
-          const responseTime = (log.sentAt.getTime() - q.sentAt.getTime()) / 1000;
+          const responseTime =
+            (log.sentAt.getTime() - q.sentAt.getTime()) / 1000;
           q.isReplyToMessageId = log.telegramMessageId;
-          q.questionStatus = "ANSWERED";
+          q.questionStatus = 'ANSWERED';
           q.responseTimeSeconds = Math.round(responseTime);
           await this.messageLogRepo.save(q);
           return;
@@ -150,25 +160,36 @@ export class ResponseTimeService {
             const responseTime =
               (log.sentAt.getTime() - bestMatch.sentAt.getTime()) / 1000;
             bestMatch.isReplyToMessageId = log.telegramMessageId;
-            bestMatch.questionStatus = "ANSWERED";
+            bestMatch.questionStatus = 'ANSWERED';
             bestMatch.responseTimeSeconds = Math.round(responseTime);
             await this.messageLogRepo.save(bestMatch);
             return;
           }
           // SUPERVISORga signal: noaniq bog'lanish
-          this.logger.warn('Noaniq javob matching holati, supervisor xabardor qilinadi', { chatId: message.chat.id });
-          await this.notifySupervisors(message.chat.id, 'Noaniq javob matching holati. Tekshiruv va tasdiqlash kerak.');
+          this.logger.warn(
+            'Noaniq javob matching holati, supervisor xabardor qilinadi',
+            { chatId: message.chat.id },
+          );
+          await this.notifySupervisors(
+            message.chat.id,
+            'Noaniq javob matching holati. Tekshiruv va tasdiqlash kerak.',
+          );
         }
       }
     } catch (error) {
-      this.logger.error('processMessage xatolikka uchradi', error.stack || error.message || error);
+      this.logger.error(
+        'processMessage xatolikka uchradi',
+        error.stack || error.message || error,
+      );
       throw error;
     }
   }
 
   // SUPERVISORga signal yuborish uchun yordamchi metod
   private async notifySupervisors(chatId: string, notification: string) {
-    this.logger.log(`notifySupervisors called for chatId=${chatId}, notification='${notification}'`);
+    this.logger.log(
+      `notifySupervisors called for chatId=${chatId}, notification='${notification}'`,
+    );
     // Mas’ul SUPERVISORlarni aniqlash (UserChatRoleEntity orqali)
     // TODO: UserChatRoleEntity dan ushbu chat uchun SUPERVISORlarni topib, ularga notification yuboring.
     // Bu yerda TelegramService yoki ctx orqali xabar yuborish mumkin.
@@ -177,4 +198,3 @@ export class ResponseTimeService {
     // supervisors.forEach(sup => this.telegramService.sendMessage(sup.userId, notification));
   }
 }
-

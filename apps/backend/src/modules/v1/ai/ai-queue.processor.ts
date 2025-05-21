@@ -17,7 +17,9 @@ export class AiQueueProcessor {
   async handleSentimentJob(job: Job<{ text: string }>) {
     this.logger.log(`Processing sentiment job: ${JSON.stringify(job.data)}`);
     try {
-      const result = await this.aiTaskCoordinator.analyzeSentiment(job.data.text);
+      const result = await this.aiTaskCoordinator.analyzeSentiment(
+        job.data.text,
+      );
       await this.aiAnalysisResultService.saveResult({
         type: 'sentiment',
         inputText: job.data.text,
@@ -35,9 +37,13 @@ export class AiQueueProcessor {
 
   @Process('question_analysis')
   async handleQuestionAnalysisJob(job: Job<{ text: string }>) {
-    this.logger.log(`Processing question_analysis job: ${JSON.stringify(job.data)}`);
+    this.logger.log(
+      `Processing question_analysis job: ${JSON.stringify(job.data)}`,
+    );
     try {
-      const result = await this.aiTaskCoordinator.analyzeQuestion(job.data.text);
+      const result = await this.aiTaskCoordinator.analyzeQuestion(
+        job.data.text,
+      );
       await this.aiAnalysisResultService.saveResult({
         type: 'question_analysis',
         inputText: job.data.text,
@@ -54,10 +60,15 @@ export class AiQueueProcessor {
   }
 
   @Process('reply_analysis')
-  async handleReplyAnalysisJob(job: Job<{ question: string, answer: string }>) {
-    this.logger.log(`Processing reply_analysis job: ${JSON.stringify(job.data)}`);
+  async handleReplyAnalysisJob(job: Job<{ question: string; answer: string }>) {
+    this.logger.log(
+      `Processing reply_analysis job: ${JSON.stringify(job.data)}`,
+    );
     try {
-      const result = await this.aiTaskCoordinator.analyzeReply(job.data.question, job.data.answer);
+      const result = await this.aiTaskCoordinator.analyzeReply(
+        job.data.question,
+        job.data.answer,
+      );
       await this.aiAnalysisResultService.saveResult({
         type: 'reply_analysis',
         inputText: JSON.stringify(job.data),

@@ -14,12 +14,20 @@ export class CreateUserDto {
   @IsString()
   firstName: string;
 
-  @ApiProperty({ example: 'Valiyev', required: false, description: 'User last name' })
+  @ApiProperty({
+    example: 'Valiyev',
+    required: false,
+    description: 'User last name',
+  })
   @IsOptional()
   @IsString()
   lastName?: string;
 
-  @ApiProperty({ example: 'ali_valiyev', required: false, description: 'Telegram username' })
+  @ApiProperty({
+    example: 'ali_valiyev',
+    required: false,
+    description: 'Telegram username',
+  })
   @IsOptional()
   @IsString()
   username?: string;

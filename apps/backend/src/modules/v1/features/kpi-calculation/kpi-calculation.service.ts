@@ -14,9 +14,15 @@ export class KpiCalculationService {
     private readonly userRepo: Repository<UserEntity>,
     @InjectRepository(MessageLogEntity)
     private readonly messageLogRepo: Repository<MessageLogEntity>,
-    @InjectRepository(require('../kpi-report-submission/entities/report-log.entity').ReportLogEntity)
+    @InjectRepository(
+      require('../kpi-report-submission/entities/report-log.entity')
+        .ReportLogEntity,
+    )
     private readonly reportLogRepo: Repository<any>,
-    @InjectRepository(require('../attendance-log/entities/attendance-log.entity').AttendanceLogEntity)
+    @InjectRepository(
+      require('../attendance-log/entities/attendance-log.entity')
+        .AttendanceLogEntity,
+    )
     private readonly attendanceLogRepo: Repository<any>,
   ) {}
 
@@ -27,7 +33,11 @@ export class KpiCalculationService {
    * @param periodStart
    * @param periodEnd
    */
-  async calculateAttendanceKpisForUser(userId: number, periodStart: Date, periodEnd: Date) {
+  async calculateAttendanceKpisForUser(
+    userId: number,
+    periodStart: Date,
+    periodEnd: Date,
+  ) {
     // AttendanceLogEntity import
     const logs = await this.attendanceLogRepo.find({
       where: {
@@ -64,8 +74,8 @@ export class KpiCalculationService {
         {
           metric: 'ATTENDANCE_ON_TIME_PERCENT',
           value: percentOnTime,
-          period: { start: periodStart, end: periodEnd }
-        }
+          period: { start: periodStart, end: periodEnd },
+        },
       );
     }
     return { percentOnTime };
@@ -78,7 +88,11 @@ export class KpiCalculationService {
    * @param periodStart
    * @param periodEnd
    */
-  async calculateReportSubmissionKpisForUser(userId: number, periodStart: Date, periodEnd: Date) {
+  async calculateReportSubmissionKpisForUser(
+    userId: number,
+    periodStart: Date,
+    periodEnd: Date,
+  ) {
     // ReportStatus import
     const { ReportStatus } = require('../../shared/enums/report-status.enum');
     const submitted = await this.reportLogRepo.find({
@@ -89,9 +103,11 @@ export class KpiCalculationService {
       relations: ['submittedByUser'],
     });
     if (!submitted.length) return;
-    const onTime = submitted.filter((r: any) =>
-      (r.status === ReportStatus.APPROVED || r.status === ReportStatus.PENDING) &&
-      (!r.deadlineAt || r.submittedAt <= r.deadlineAt)
+    const onTime = submitted.filter(
+      (r: any) =>
+        (r.status === ReportStatus.APPROVED ||
+          r.status === ReportStatus.PENDING) &&
+        (!r.deadlineAt || r.submittedAt <= r.deadlineAt),
     ).length;
     const percentOnTime = Math.round((onTime / submitted.length) * 100);
     // KPI'ni KpiScoreEntity'ga yozish
@@ -115,8 +131,8 @@ export class KpiCalculationService {
         {
           metric: 'REPORTS_ON_TIME_PERCENT',
           value: percentOnTime,
-          period: { start: periodStart, end: periodEnd }
-        }
+          period: { start: periodStart, end: periodEnd },
+        },
       );
     }
     return { percentOnTime };
@@ -130,12 +146,16 @@ export class KpiCalculationService {
    * @param periodStart
    * @param periodEnd
    */
-  async calculateResponseTimeKpisForUser(userId: number, periodStart: Date, periodEnd: Date) {
-    const user = await this.userRepo.findOne({ 
+  async calculateResponseTimeKpisForUser(
+    userId: number,
+    periodStart: Date,
+    periodEnd: Date,
+  ) {
+    const user = await this.userRepo.findOne({
       where: { id: userId },
-      relations: ['messageLog', 'reportLog', 'attendanceLog']
+      relations: ['messageLog', 'reportLog', 'attendanceLog'],
     });
-    
+
     if (!user) {
       throw new NotFoundException('Foydalanuvchi topilmadi');
     }
@@ -144,9 +164,7 @@ export class KpiCalculationService {
     // MessageLogEntity repository ni inject qilamiz
     const answered = await this.messageLogRepo.find({
       where: {
-        
-        questionStatus: "ANSWERED",
-        
+        questionStatus: 'ANSWERED',
       },
       relations: ['senderUser', 'replyByUser'],
     });
@@ -154,10 +172,17 @@ export class KpiCalculationService {
 
     // O'rtacha javob vaqti
     const avgResponseTime =
-      answered.reduce((acc: number, q: any) => acc + (q.responseTimeSeconds || 0), 0) / answered.length;
+      answered.reduce(
+        (acc: number, q: any) => acc + (q.responseTimeSeconds || 0),
+        0,
+      ) / answered.length;
     // 10 daqiqada javob berilganlar foizi
-    const answeredIn10Min = answered.filter((q: any) => (q.responseTimeSeconds || 0) <= 600).length;
-    const percentIn10Min = Math.round((answeredIn10Min / answered.length) * 100);
+    const answeredIn10Min = answered.filter(
+      (q: any) => (q.responseTimeSeconds || 0) <= 600,
+    ).length;
+    const percentIn10Min = Math.round(
+      (answeredIn10Min / answered.length) * 100,
+    );
 
     // KPI'larni KpiScoreEntity'ga yozish
     const avgRespScore = this.kpiScoreRepo.create({
@@ -187,8 +212,8 @@ export class KpiCalculationService {
         {
           metric: 'AVG_RESPONSE_TIME',
           value: avgResponseTime,
-          period: { start: periodStart, end: periodEnd }
-        }
+          period: { start: periodStart, end: periodEnd },
+        },
       );
       await (this as any).auditLogService.logAction(
         'KPI_CALCULATED',
@@ -197,8 +222,8 @@ export class KpiCalculationService {
         {
           metric: 'PERCENT_RESPONSE_UNDER_10MIN',
           value: percentIn10Min,
-          period: { start: periodStart, end: periodEnd }
-        }
+          period: { start: periodStart, end: periodEnd },
+        },
       );
     }
     return { avgResponseTime, percentIn10Min };
@@ -212,7 +237,11 @@ export class KpiCalculationService {
   async calculateAllUsersResponseTimeKpis(periodStart: Date, periodEnd: Date) {
     const users = await this.userRepo.find();
     for (const user of users) {
-      await this.calculateResponseTimeKpisForUser(user.id, periodStart, periodEnd);
+      await this.calculateResponseTimeKpisForUser(
+        user.id,
+        periodStart,
+        periodEnd,
+      );
     }
   }
 

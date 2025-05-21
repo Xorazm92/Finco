@@ -10,9 +10,7 @@ export class AiAnalysisResultService {
   constructor(
     @InjectRepository(AiAnalysisResultEntity)
     private readonly resultRepo: Repository<AiAnalysisResultEntity>,
-
   ) {}
-
 
   async saveResult(data: Partial<AiAnalysisResultEntity>) {
     const entity = this.resultRepo.create(data);
@@ -34,6 +32,4 @@ export class AiAnalysisResultService {
   async countAll() {
     return this.resultRepo.count();
   }
-
-
 }

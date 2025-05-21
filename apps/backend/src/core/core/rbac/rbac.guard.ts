@@ -1,4 +1,9 @@
-import { CanActivate, ExecutionContext, Injectable, ForbiddenException } from '@nestjs/common';
+import {
+  CanActivate,
+  ExecutionContext,
+  Injectable,
+  ForbiddenException,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 
 @Injectable()
@@ -18,7 +23,7 @@ export class RbacGuard implements CanActivate {
     if (!user || !user.roles) {
       throw new ForbiddenException('No user roles found');
     }
-    const hasRole = requiredRoles.some(role => user.roles.includes(role));
+    const hasRole = requiredRoles.some((role) => user.roles.includes(role));
     if (!hasRole) {
       throw new ForbiddenException('Insufficient permissions');
     }

@@ -17,9 +17,9 @@ import { AttendanceLogEntity } from '../attendance-log/entities/attendance-log.e
       UserEntity,
       MessageLogEntity,
       ReportLogEntity,
-      AttendanceLogEntity
+      AttendanceLogEntity,
     ]),
-    ReportSubmissionModule
+    ReportSubmissionModule,
   ],
   providers: [KpiCalculationService],
   exports: [KpiCalculationService],

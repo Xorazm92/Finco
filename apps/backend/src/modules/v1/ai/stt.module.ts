@@ -14,13 +14,7 @@ import { AiQueueService } from './ai-queue.service';
     ConfigModule,
     MessageLogModule,
   ],
-  providers: [
-    SttService,
-    SttProcessor,
-    AiQueueService,
-  ],
-  exports: [
-    SttService,
-  ],
+  providers: [SttService, SttProcessor, AiQueueService],
+  exports: [SttService],
 })
 export class SttModule {}

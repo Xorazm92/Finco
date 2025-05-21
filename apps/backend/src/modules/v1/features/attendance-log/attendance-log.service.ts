@@ -21,12 +21,17 @@ export class AttendanceLogService {
     today.setHours(0, 0, 0, 0);
     const { MoreThanOrEqual } = require('typeorm');
     const exist = await this.attendanceLogRepo.findOne({
-      where: { user, telegramChatId: chatId, checkinAt: MoreThanOrEqual(today) },
+      where: {
+        user,
+        telegramChatId: chatId,
+        checkinAt: MoreThanOrEqual(today),
+      },
     });
     if (exist) return exist;
     // Check if late (after 08:30)
     const now = new Date();
-    const isLate = now.getHours() > 8 || (now.getHours() === 8 && now.getMinutes() > 30);
+    const isLate =
+      now.getHours() > 8 || (now.getHours() === 8 && now.getMinutes() > 30);
     const log = this.attendanceLogRepo.create({
       user,
       telegramChatId: chatId,
@@ -44,7 +49,11 @@ export class AttendanceLogService {
     today.setHours(0, 0, 0, 0);
     const { MoreThanOrEqual } = require('typeorm');
     const log = await this.attendanceLogRepo.findOne({
-      where: { user, telegramChatId: chatId, checkinAt: MoreThanOrEqual(today) },
+      where: {
+        user,
+        telegramChatId: chatId,
+        checkinAt: MoreThanOrEqual(today),
+      },
     });
     if (!log) return null;
     log.checkoutAt = new Date();

@@ -19,20 +19,24 @@ async function bootstrap() {
   app.useGlobalFilters(new AllExceptionsFilter());
 
   // Global validation pipe
-  app.useGlobalPipes(new ValidationPipe({
-    whitelist: true,
-    forbidNonWhitelisted: true,
-    transform: true,
-    transformOptions: { enableImplicitConversion: true },
-    errorHttpStatusCode: 422,
-    exceptionFactory: (errors) => {
-      return {
-        statusCode: 422,
-        message: errors.map(e => Object.values(e.constraints || {}).join('; ')).join(' | '),
-        error: 'ValidationError',
-      };
-    },
-  }));
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+      transformOptions: { enableImplicitConversion: true },
+      errorHttpStatusCode: 422,
+      exceptionFactory: (errors) => {
+        return {
+          statusCode: 422,
+          message: errors
+            .map((e) => Object.values(e.constraints || {}).join('; '))
+            .join(' | '),
+          error: 'ValidationError',
+        };
+      },
+    }),
+  );
 
   // Swagger config
   const config = new DocumentBuilder()

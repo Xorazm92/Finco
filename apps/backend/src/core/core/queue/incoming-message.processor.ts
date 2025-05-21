@@ -29,19 +29,30 @@ export class IncomingMessageProcessor {
 
     try {
       // 1. Foydalanuvchi va roli
-      const { user, userChatRole } = await this.userService.findOrCreateUserFromTelegramContext(msg);
+      const { user, userChatRole } =
+        await this.userService.findOrCreateUserFromTelegramContext(msg);
 
       // 2. Savolni aniqlash (oddiy qoidalar)
-      const hasText = typeof msg === 'object' && 'text' in msg && typeof msg.text === 'string';
-      const isPotentialQuestion = hasText && (
-        msg.text.includes('?') ||
-        /mi\?|qachon|qanday|nima uchun/i.test(msg.text)
-      );
+      const hasText =
+        typeof msg === 'object' &&
+        'text' in msg &&
+        typeof msg.text === 'string';
+      const isPotentialQuestion =
+        hasText &&
+        (msg.text.includes('?') ||
+          /mi\?|qachon|qanday|nima uchun/i.test(msg.text));
 
       // 3. Loglash
-      const textContent = (hasText ? msg.text : null);
-      const isReplyToMessageId = (typeof msg === 'object' && 'reply_to_message' in msg && msg.reply_to_message && 'message_id' in msg.reply_to_message) ? msg.reply_to_message.message_id : null;
-      const hasDocument = typeof msg === 'object' && 'document' in msg && !!msg.document;
+      const textContent = hasText ? msg.text : null;
+      const isReplyToMessageId =
+        typeof msg === 'object' &&
+        'reply_to_message' in msg &&
+        msg.reply_to_message &&
+        'message_id' in msg.reply_to_message
+          ? msg.reply_to_message.message_id
+          : null;
+      const hasDocument =
+        typeof msg === 'object' && 'document' in msg && !!msg.document;
       const hasPhoto = typeof msg === 'object' && 'photo' in msg && !!msg.photo;
       const hasAudio = typeof msg === 'object' && 'audio' in msg && !!msg.audio;
       const hasVoice = typeof msg === 'object' && 'voice' in msg && !!msg.voice;
@@ -71,16 +82,26 @@ export class IncomingMessageProcessor {
       }
 
       // 5. Javob bo‘lsa, reply orqali yoki reply'siz (AI) tahlil uchun navbatga qo‘shish
-      const hasReplyTo = typeof msg === 'object' && 'reply_to_message' in msg && !!msg.reply_to_message;
+      const hasReplyTo =
+        typeof msg === 'object' &&
+        'reply_to_message' in msg &&
+        !!msg.reply_to_message;
       if (hasReplyTo && hasText) {
         await this.aiQueueService.addSentimentJob(msg.text); // Yoki addReplyAnalysisJob
       } else {
-        if (["ACCOUNTANT", "BANK_CLIENT", "BANK_CLIENT_SPECIALIST"].includes(userChatRole.role) && hasText) {
+        if (
+          ['ACCOUNTANT', 'BANK_CLIENT', 'BANK_CLIENT_SPECIALIST'].includes(
+            userChatRole.role,
+          ) &&
+          hasText
+        ) {
           await this.aiQueueService.addSentimentJob(msg.text); // Yoki addPotentialReplyJob
         }
       }
 
-      this.logger.log(`Xabar qayta ishlovchi worker orqali loglandi: chat_id=${chatId}, user_id=${telegramUserId}`);
+      this.logger.log(
+        `Xabar qayta ishlovchi worker orqali loglandi: chat_id=${chatId}, user_id=${telegramUserId}`,
+      );
     } catch (error) {
       this.logger.error('Workerda xatolik:', error);
     }

@@ -33,7 +33,12 @@ import { PenaltyService } from './penalty.service';
     PenaltyService,
     PayrollAuditLogService,
   ],
-  controllers: [PayrollController, BonusController, AdvanceController, PenaltyController],
+  controllers: [
+    PayrollController,
+    BonusController,
+    AdvanceController,
+    PenaltyController,
+  ],
   exports: [
     PayrollService,
     BonusService,

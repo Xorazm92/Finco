@@ -1,11 +1,14 @@
-import { Telegraf } from 'telegraf';
-import * as dotenv from 'dotenv';
-dotenv.config();
+import { NestFactory } from '@nestjs/core';
+import { TelegramModule } from './modules/telegram.module';
+import { Logger } from '@nestjs/common';
 
-const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN!);
+async function bootstrap() {
+  const app = await NestFactory.create(TelegramModule, {
+    bufferLogs: true,
+  });
+  app.useLogger(app.get(Logger));
+  await app.listen(3001);
+  Logger.log('Telegram bot NestJS ilovasi ishga tushdi!');
+}
 
-bot.start((ctx) => ctx.reply('Salom! Telegram bot ishlayapti.'));
-bot.on('text', (ctx) => ctx.reply('Xabar qabul qilindi.'));
-
-bot.launch();
-console.log('Telegram bot ishga tushdi!');
+bootstrap();

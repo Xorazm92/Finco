@@ -10,7 +10,14 @@ export class PayrollAuditLogService {
     private readonly auditLogRepo: Repository<AuditLogEntity>,
   ) {}
 
-  async logBonus({ userId, companyId, amount, performedBy, comment, action }: {
+  async logBonus({
+    userId,
+    companyId,
+    amount,
+    performedBy,
+    comment,
+    action,
+  }: {
     userId: number;
     companyId: number;
     amount: number;
@@ -31,7 +38,14 @@ export class PayrollAuditLogService {
     return this.auditLogRepo.save(log);
   }
 
-  async logAdvance({ userId, companyId, amount, performedBy, comment, action }: {
+  async logAdvance({
+    userId,
+    companyId,
+    amount,
+    performedBy,
+    comment,
+    action,
+  }: {
     userId: number;
     companyId: number;
     amount: number;
@@ -52,7 +66,14 @@ export class PayrollAuditLogService {
     return this.auditLogRepo.save(log);
   }
 
-  async logPenalty({ userId, companyId, amount, performedBy, comment, action }: {
+  async logPenalty({
+    userId,
+    companyId,
+    amount,
+    performedBy,
+    comment,
+    action,
+  }: {
     userId: number;
     companyId: number;
     amount: number;

@@ -7,7 +7,12 @@ import { KpiCalculationService } from '../kpi/kpi-calculation.service';
 
 @Module({
   controllers: [PayrollReportController],
-  providers: [PayrollService, UserService, UserCompanyAssignmentService, KpiCalculationService],
+  providers: [
+    PayrollService,
+    UserService,
+    UserCompanyAssignmentService,
+    KpiCalculationService,
+  ],
   exports: [PayrollReportController],
 })
 export class PayrollReportModule {}

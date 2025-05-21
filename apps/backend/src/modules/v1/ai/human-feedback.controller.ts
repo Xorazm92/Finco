@@ -1,5 +1,11 @@
 import { Controller, Post, Body, Get, Query } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBody,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { HumanFeedbackService } from './human-feedback.service';
 
 @ApiTags('Human Feedback')
@@ -15,25 +21,33 @@ export class HumanFeedbackController {
         aiAnalysisResultId: 1,
         reviewerTelegramId: '123456789',
         verdict: 'approved',
-        comment: 'AI natijasi to‘g‘ri.'
+        comment: 'AI natijasi to‘g‘ri.',
       },
       properties: {
         aiAnalysisResultId: { type: 'number', example: 1 },
         reviewerTelegramId: { type: 'string', example: '123456789' },
-        verdict: { type: 'string', enum: ['approved', 'rejected', 'corrected'], example: 'approved' },
-        comment: { type: 'string', example: "AI natijasi to‘g‘ri." }
+        verdict: {
+          type: 'string',
+          enum: ['approved', 'rejected', 'corrected'],
+          example: 'approved',
+        },
+        comment: { type: 'string', example: 'AI natijasi to‘g‘ri.' },
       },
-      required: ['aiAnalysisResultId', 'verdict']
-    }
+      required: ['aiAnalysisResultId', 'verdict'],
+    },
   })
   @ApiResponse({ status: 201, description: 'Feedback added' })
-  async addFeedback(@Body() dto: {
-    aiAnalysisResultId: number;
-    reviewerTelegramId?: string;
-    verdict: 'approved' | 'rejected' | 'corrected';
-    comment?: string;
-  }) {
-    if (!dto.aiAnalysisResultId || !dto.verdict) return { error: 'aiAnalysisResultId and verdict required' };
+  async addFeedback(
+    @Body()
+    dto: {
+      aiAnalysisResultId: number;
+      reviewerTelegramId?: string;
+      verdict: 'approved' | 'rejected' | 'corrected';
+      comment?: string;
+    },
+  ) {
+    if (!dto.aiAnalysisResultId || !dto.verdict)
+      return { error: 'aiAnalysisResultId and verdict required' };
     return this.feedbackService.addFeedback(dto);
   }
 

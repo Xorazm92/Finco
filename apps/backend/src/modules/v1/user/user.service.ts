@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UserEntity } from '../user-management/entities/user.entity';
@@ -19,11 +23,20 @@ export class UserService {
   async findOrCreateUserFromTelegramContext(
     message: any, // TelegramBot.Message
     defaultRoleInChat: UserRole = UserRole.CLIENT,
-  ): Promise<{ user: UserEntity; userChatRole: UserChatRoleEntity; isNewUser: boolean; isNewRoleInChat: boolean }> {
+  ): Promise<{
+    user: UserEntity;
+    userChatRole: UserChatRoleEntity;
+    isNewUser: boolean;
+    isNewRoleInChat: boolean;
+  }> {
     const telegramUser = message.from;
     const chatId = message.chat.id;
-    if (!telegramUser) throw new Error('Telegram user data not found in context.');
-    let user = await this.userRepository.findOne({ where: { telegramId: String(telegramUser.id) }, relations: ['chatRoles'] });
+    if (!telegramUser)
+      throw new Error('Telegram user data not found in context.');
+    let user = await this.userRepository.findOne({
+      where: { telegramId: String(telegramUser.id) },
+      relations: ['chatRoles'],
+    });
     let isNewUser = false;
     if (!user) {
       user = this.userRepository.create({
@@ -31,16 +44,16 @@ export class UserService {
         firstName: telegramUser.first_name,
         lastName: telegramUser.last_name,
         username: telegramUser.username,
-        
+
         isActive: true,
-        
+
         chatRoles: [],
       });
       await this.userRepository.save(user);
       isNewUser = true;
       // TODO: ADMINga yangi foydalanuvchi haqida xabar yuborish (TelegramService orqali)
     }
-    let userChatRole = user.chatRoles?.find(cr => cr.chatId == chatId);
+    let userChatRole = user.chatRoles?.find((cr) => cr.chatId == chatId);
     let isNewRoleInChat = false;
     if (!userChatRole) {
       userChatRole = this.userChatRoleRepository.create({
@@ -66,9 +79,15 @@ export class UserService {
     chatId: string,
     role: UserRole,
   ): Promise<UserChatRoleEntity> {
-    const targetUser = await this.userRepository.findOne({ where: { telegramId: String(targetTelegramId) }, relations: ['chatRoles'] });
-    if (!targetUser) throw new NotFoundException(`User with Telegram ID ${targetTelegramId} not found.`);
-    let userChatRole = targetUser.chatRoles?.find(cr => cr.chatId == chatId);
+    const targetUser = await this.userRepository.findOne({
+      where: { telegramId: String(targetTelegramId) },
+      relations: ['chatRoles'],
+    });
+    if (!targetUser)
+      throw new NotFoundException(
+        `User with Telegram ID ${targetTelegramId} not found.`,
+      );
+    let userChatRole = targetUser.chatRoles?.find((cr) => cr.chatId == chatId);
     if (userChatRole) {
       userChatRole.role = role;
     } else {
@@ -101,9 +120,7 @@ export class UserService {
     return rest as UserEntity;
   }
 
-  async findByTelegramId(
-    telegramId: string,
-  ): Promise<UserEntity | undefined> {
+  async findByTelegramId(telegramId: string): Promise<UserEntity | undefined> {
     return (
       (await this.userRepository.findOne({ where: { telegramId } })) ??
       undefined
@@ -113,12 +130,19 @@ export class UserService {
   /**
    * Telegram ID orqali user id ni qaytaradi (agar mavjud bo'lsa)
    */
-  async getUserIdByTelegram(telegramId: string | number): Promise<number | null> {
-    const user = await this.userRepository.findOne({ where: { telegramId: String(telegramId) } });
+  async getUserIdByTelegram(
+    telegramId: string | number,
+  ): Promise<number | null> {
+    const user = await this.userRepository.findOne({
+      where: { telegramId: String(telegramId) },
+    });
     return user ? user.id : null;
   }
 
-  async getUserRoleInChat(userId: number, chatId: string): Promise<UserRole | null> {
+  async getUserRoleInChat(
+    userId: number,
+    chatId: string,
+  ): Promise<UserRole | null> {
     const userChatRole = await this.userChatRoleRepository.findOne({
       where: { userId, chatId },
     });
@@ -128,13 +152,17 @@ export class UserService {
   async createOrUpdate(userData: Partial<UserEntity>): Promise<UserEntity> {
     // Username yoki telegramId allaqachon mavjudligini tekshirish
     if (userData.username) {
-      const existingByUsername = await this.userRepository.findOne({ where: { username: userData.username } });
+      const existingByUsername = await this.userRepository.findOne({
+        where: { username: userData.username },
+      });
       if (existingByUsername) {
         throw new BadRequestException('Bunday username allaqachon mavjud');
       }
     }
     if (userData.telegramId) {
-      const existingByTelegramId = await this.userRepository.findOne({ where: { telegramId: userData.telegramId } });
+      const existingByTelegramId = await this.userRepository.findOne({
+        where: { telegramId: userData.telegramId },
+      });
       if (existingByTelegramId) {
         throw new BadRequestException('Bunday Telegram ID allaqachon mavjud');
       }
@@ -162,17 +190,27 @@ export class UserService {
     role: UserRole,
     assignedBy?: string,
   ): Promise<UserChatRoleEntity> {
-    let userChatRole = await this.userChatRoleRepository.findOne({ where: { userId, chatId } });
+    let userChatRole = await this.userChatRoleRepository.findOne({
+      where: { userId, chatId },
+    });
     let assignedByUserIdNum: number | undefined = undefined;
     if (assignedBy) {
-      const assignedByUser = await this.userRepository.findOne({ where: { telegramId: String(assignedBy) } });
+      const assignedByUser = await this.userRepository.findOne({
+        where: { telegramId: String(assignedBy) },
+      });
       if (assignedByUser) assignedByUserIdNum = assignedByUser.id;
     }
     if (!userChatRole) {
-      userChatRole = this.userChatRoleRepository.create({ userId: Number(userId), chatId: String(chatId), role, assignedByUserId: assignedByUserIdNum });
+      userChatRole = this.userChatRoleRepository.create({
+        userId: Number(userId),
+        chatId: String(chatId),
+        role,
+        assignedByUserId: assignedByUserIdNum,
+      });
     } else {
       userChatRole.role = role;
-      if (assignedByUserIdNum !== undefined) userChatRole.assignedByUserId = assignedByUserIdNum;
+      if (assignedByUserIdNum !== undefined)
+        userChatRole.assignedByUserId = assignedByUserIdNum;
     }
     return this.userChatRoleRepository.save(userChatRole);
   }
@@ -189,11 +227,20 @@ export class UserService {
   /**
    * Username/password orqali foydalanuvchini tekshiradi (login uchun)
    */
-  async validateUser(username: string, password: string): Promise<UserEntity | null> {
+  async validateUser(
+    username: string,
+    password: string,
+  ): Promise<UserEntity | null> {
     const fs = require('fs');
-    fs.appendFileSync('diagnostic.log', `VALIDATE USER: ${username} ${password}\n`);
+    fs.appendFileSync(
+      'diagnostic.log',
+      `VALIDATE USER: ${username} ${password}\n`,
+    );
     const user = await this.userRepository.findOne({ where: { username } });
-    fs.appendFileSync('diagnostic.log', `FOUND USER: ${JSON.stringify(user)}\n`);
+    fs.appendFileSync(
+      'diagnostic.log',
+      `FOUND USER: ${JSON.stringify(user)}\n`,
+    );
     if (user && user.password) {
       const isMatch = await bcrypt.compare(password, user.password);
       if (isMatch) {
@@ -233,12 +280,17 @@ export class UserService {
   /**
    * Telegram ID yoki username orqali userni topish
    */
-  async findByTelegramIdOrUsername(identifier: string): Promise<UserEntity | null> {
-    let user = await this.userRepository.findOne({ where: { telegramId: identifier } });
+  async findByTelegramIdOrUsername(
+    identifier: string,
+  ): Promise<UserEntity | null> {
+    let user = await this.userRepository.findOne({
+      where: { telegramId: identifier },
+    });
     if (!user) {
-      user = await this.userRepository.findOne({ where: { username: identifier } });
+      user = await this.userRepository.findOne({
+        where: { username: identifier },
+      });
     }
     return user ?? null;
   }
 }
-

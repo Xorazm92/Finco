@@ -19,7 +19,10 @@ export class UserCompanyAssignmentService {
   }
 
   async findOne(id: number) {
-    return this.assignmentRepo.findOne({ where: { id }, relations: ['user', 'company'] });
+    return this.assignmentRepo.findOne({
+      where: { id },
+      relations: ['user', 'company'],
+    });
   }
 
   async findByUserAndCompany(userId: number, companyId: number) {

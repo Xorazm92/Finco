@@ -2,7 +2,6 @@ import { Injectable, OnModuleInit, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { UserService } from '../user-management/user.service';
 import { KpiService } from '../kpi/kpi.service';
 import { KpiAnalyticsService } from '../kpi/kpi-analytics.service';
 import { AuditLogService } from '../kpi/audit-log.service';
@@ -21,7 +20,7 @@ export class TelegramBotProvider implements OnModuleInit {
 
   constructor(
     private readonly configService: ConfigService,
-    private readonly userService: UserService,
+    // private readonly userService: UserService,
     private readonly kpiService: KpiService,
     private readonly kpiAnalyticsService: KpiAnalyticsService,
     private readonly messageLogService: MessageLogService,
@@ -61,17 +60,33 @@ export class TelegramBotProvider implements OnModuleInit {
   }
 
   // Universal handler for AI feedback
-  private async handleAiFeedbackCommand(msg: any, match: RegExpMatchArray, verdict: 'approved' | 'rejected' | 'corrected') {
+  private async handleAiFeedbackCommand(
+    msg: any,
+    match: RegExpMatchArray,
+    verdict: 'approved' | 'rejected' | 'corrected',
+  ) {
     const telegramId = String(msg.from?.id);
     try {
-      const caller = await this.userService.findByTelegramId(telegramId);
+      const caller = await /* this.userService. */ findByTelegramId(telegramId);
       if (!caller) {
-        await this.bot.sendMessage(msg.chat.id, 'Siz ro‘yxatdan o‘tmagansiz! Avval  yuboring.');
+        await this.bot.sendMessage(
+          msg.chat.id,
+          'Siz ro‘yxatdan o‘tmagansiz! Avval  yuboring.',
+        );
         return;
       }
-      const callerRole = await this.userService.getUserRole(caller.telegramId, String(msg.chat.id));
-      if (!callerRole || !['SUPERVISOR', 'ADMIN'].includes(String(callerRole))) {
-        await this.bot.sendMessage(msg.chat.id, 'Bu buyruq faqat SUPERVISOR yoki ADMIN uchun!');
+      const callerRole = await /* this.userService. */ getUserRole(
+        caller.telegramId,
+        String(msg.chat.id),
+      );
+      if (
+        !callerRole ||
+        !['SUPERVISOR', 'ADMIN'].includes(String(callerRole))
+      ) {
+        await this.bot.sendMessage(
+          msg.chat.id,
+          'Bu buyruq faqat SUPERVISOR yoki ADMIN uchun!',
+        );
         return;
       }
       const id = match && match[1] ? Number(match[1]) : undefined;
@@ -83,43 +98,70 @@ export class TelegramBotProvider implements OnModuleInit {
       if (verdict === 'corrected') {
         comment = match && match[2] ? match[2].trim() : undefined;
         if (!comment) {
-          await this.bot.sendMessage(msg.chat.id, 'Tuzatish yoki izoh kiritilishi shart: /correct_ai <id> <izoh>');
+          await this.bot.sendMessage(
+            msg.chat.id,
+            'Tuzatish yoki izoh kiritilishi shart: /correct_ai <id> <izoh>',
+          );
           return;
         }
       }
       // Send feedback to API
-      const res = await fetch(`${process.env.API_BASE_URL || 'http://localhost:3000'}/human-feedback/add`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          aiAnalysisResultId: id,
-          reviewerTelegramId: telegramId,
-          verdict,
-          comment,
-        }),
-      });
+      const res = await fetch(
+        `${process.env.API_BASE_URL || 'http://localhost:3000'}/human-feedback/add`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            aiAnalysisResultId: id,
+            reviewerTelegramId: telegramId,
+            verdict,
+            comment,
+          }),
+        },
+      );
       if (!res.ok) {
         await this.bot.sendMessage(msg.chat.id, 'Feedback yuborishda xatolik.');
         return;
       }
-      await this.bot.sendMessage(msg.chat.id, `✅ Feedback (${verdict}) qabul qilindi!`);
+      await this.bot.sendMessage(
+        msg.chat.id,
+        `✅ Feedback (${verdict}) qabul qilindi!`,
+      );
     } catch (err) {
       this.logger.error('AI Feedback error', err);
-      await this.bot.sendMessage(msg.chat.id, `Xatolik: ${(err && err.message) || 'Noma’lum xato'}`);
+      await this.bot.sendMessage(
+        msg.chat.id,
+        `Xatolik: ${(err && err.message) || 'Noma’lum xato'}`,
+      );
     }
   }
 
-  private async handleReviewAiAssessmentCommand(msg: any, match: RegExpMatchArray) {
+  private async handleReviewAiAssessmentCommand(
+    msg: any,
+    match: RegExpMatchArray,
+  ) {
     const telegramId = String(msg.from?.id);
     try {
-      const caller = await this.userService.findByTelegramId(telegramId);
+      const caller = await /* this.userService. */ findByTelegramId(telegramId);
       if (!caller) {
-        await this.bot.sendMessage(msg.chat.id, `Siz ro'yxatdan o'tmagansiz! Avval /register yuboring.`);
+        await this.bot.sendMessage(
+          msg.chat.id,
+          `Siz ro'yxatdan o'tmagansiz! Avval /register yuboring.`,
+        );
         return;
       }
-      const callerRole = await this.userService.getUserRole(caller.telegramId, String(msg.chat.id));
-      if (!callerRole || !['SUPERVISOR', 'ADMIN'].includes(String(callerRole))) {
-        await this.bot.sendMessage(msg.chat.id, 'Bu buyruq faqat SUPERVISOR yoki ADMIN uchun!');
+      const callerRole = await /* this.userService. */ getUserRole(
+        caller.telegramId,
+        String(msg.chat.id),
+      );
+      if (
+        !callerRole ||
+        !['SUPERVISOR', 'ADMIN'].includes(String(callerRole))
+      ) {
+        await this.bot.sendMessage(
+          msg.chat.id,
+          'Bu buyruq faqat SUPERVISOR yoki ADMIN uchun!',
+        );
         return;
       }
       const id = match && match[1] ? Number(match[1]) : undefined;
@@ -128,7 +170,9 @@ export class TelegramBotProvider implements OnModuleInit {
         return;
       }
       // Fetch AI result from API
-      const res = await fetch(`${process.env.API_BASE_URL || 'http://localhost:3000'}/ai-analysis-result/${id}`);
+      const res = await fetch(
+        `${process.env.API_BASE_URL || 'http://localhost:3000'}/ai-analysis-result/${id}`,
+      );
       if (!res.ok) {
         await this.bot.sendMessage(msg.chat.id, 'AI natija topilmadi.');
         return;
@@ -138,22 +182,32 @@ export class TelegramBotProvider implements OnModuleInit {
       await this.bot.sendMessage(msg.chat.id, resp);
     } catch (err) {
       this.logger.error('Review AI Assessment error', err);
-      await this.bot.sendMessage(msg.chat.id, `Xatolik: ${(err && err.message) || 'Nomalum xato'}`);
+      await this.bot.sendMessage(
+        msg.chat.id,
+        `Xatolik: ${(err && err.message) || 'Nomalum xato'}`,
+      );
     }
   }
 
   private initHandlers() {
     this.bot.onText(/\/start/, async (msg) => {
-      await this.bot.sendMessage(msg.chat.id, 'Assalomu alaykum! FinCo KPI botga xush kelibsiz.');
+      await this.bot.sendMessage(
+        msg.chat.id,
+        'Assalomu alaykum! FinCo KPI botga xush kelibsiz.',
+      );
     });
 
     // /register command
     this.bot.onText(/\/register/, async (msg) => {
       const telegramId = String(msg.from?.id);
       try {
-        const existing = await this.userService.findByTelegramId(telegramId);
+        const existing =
+          await /* this.userService. */ findByTelegramId(telegramId);
         if (existing) {
-          await this.bot.sendMessage(msg.chat.id, 'Siz allaqachon ro‘yxatdan o‘tgansiz!');
+          await this.bot.sendMessage(
+            msg.chat.id,
+            'Siz allaqachon ro‘yxatdan o‘tgansiz!',
+          );
           return;
         }
         // Generate a random password (user may never use it)
@@ -166,11 +220,17 @@ export class TelegramBotProvider implements OnModuleInit {
           password: randomPassword,
           role: UserRole.CLIENT,
         };
-        await this.userService.createOrUpdate(userData);
-        await this.bot.sendMessage(msg.chat.id, '✅ Ro‘yxatdan o‘tish muvaffaqiyatli yakunlandi! Endi barcha buyruqlardan foydalanishingiz mumkin.');
+        await /* this.userService. */ createOrUpdate(userData);
+        await this.bot.sendMessage(
+          msg.chat.id,
+          '✅ Ro‘yxatdan o‘tish muvaffaqiyatli yakunlandi! Endi barcha buyruqlardan foydalanishingiz mumkin.',
+        );
       } catch (err) {
         this.logger?.error?.('Register error', err);
-        await this.bot.sendMessage(msg.chat.id, `❌ Ro‘yxatdan o‘tishda xatolik: ${(err && err.message) || 'Noma’lum xato'}`);
+        await this.bot.sendMessage(
+          msg.chat.id,
+          `❌ Ro‘yxatdan o‘tishda xatolik: ${(err && err.message) || 'Noma’lum xato'}`,
+        );
       }
     });
 
@@ -180,20 +240,32 @@ export class TelegramBotProvider implements OnModuleInit {
       const text = msg.text || '';
       const { value, comment } = parseKpiMessage(text);
       if (value === null) {
-        await this.bot.sendMessage(msg.chat.id, 'KPI yuborish uchun: /kpi <qiymat> <izoh ixtiyoriy>\nMasalan: /kpi 1234 Bugungi KPI');
+        await this.bot.sendMessage(
+          msg.chat.id,
+          'KPI yuborish uchun: /kpi <qiymat> <izoh ixtiyoriy>\nMasalan: /kpi 1234 Bugungi KPI',
+        );
         return;
       }
       try {
-        const user = await this.userService.findByTelegramId(telegramId);
+        const user = await /* this.userService. */ findByTelegramId(telegramId);
         if (!user) {
-          await this.bot.sendMessage(msg.chat.id, 'Siz ro‘yxatdan o‘tmagansiz! Avval /register yuboring.');
+          await this.bot.sendMessage(
+            msg.chat.id,
+            'Siz ro‘yxatdan o‘tmagansiz! Avval /register yuboring.',
+          );
           return;
         }
         await this.kpiService.create(user.id, { value, comment });
-        await this.bot.sendMessage(msg.chat.id, `KPI (${value}) muvaffaqiyatli saqlandi!${comment ? '\nIzoh: ' + comment : ''}`);
+        await this.bot.sendMessage(
+          msg.chat.id,
+          `KPI (${value}) muvaffaqiyatli saqlandi!${comment ? '\nIzoh: ' + comment : ''}`,
+        );
       } catch (err) {
         this.logger.error('KPI error', err);
-        await this.bot.sendMessage(msg.chat.id, `Xatolik: ${(err && err.message) || 'Noma’lum xato'}`);
+        await this.bot.sendMessage(
+          msg.chat.id,
+          `Xatolik: ${(err && err.message) || 'Noma’lum xato'}`,
+        );
       }
     });
 
@@ -201,23 +273,36 @@ export class TelegramBotProvider implements OnModuleInit {
     this.bot.onText(/\/mykpi/, async (msg) => {
       const telegramId = String(msg.from?.id);
       try {
-        const user = await this.userService.findByTelegramId(telegramId);
+        const user = await /* this.userService. */ findByTelegramId(telegramId);
         if (!user) {
-          await this.bot.sendMessage(msg.chat.id, 'Siz ro‘yxatdan o‘tmagansiz! Avval /register yuboring.');
+          await this.bot.sendMessage(
+            msg.chat.id,
+            'Siz ro‘yxatdan o‘tmagansiz! Avval /register yuboring.',
+          );
           return;
         }
         const kpis = await this.kpiService.findByUser(user.id);
         if (!kpis.length) {
-          await this.bot.sendMessage(msg.chat.id, 'Sizda hali KPI yo‘q. KPI yuborish uchun: /kpi <qiymat> <izoh>');
+          await this.bot.sendMessage(
+            msg.chat.id,
+            'Sizda hali KPI yo‘q. KPI yuborish uchun: /kpi <qiymat> <izoh>',
+          );
           return;
         }
-        const last = kpis.slice(0, 5).map(kpi =>
-          `${kpi.createdAt.toLocaleString('uz-UZ', { hour12: false })}: ${kpi.value}${kpi.comment ? ' — ' + kpi.comment : ''}`
-        ).join('\n');
+        const last = kpis
+          .slice(0, 5)
+          .map(
+            (kpi) =>
+              `${kpi.createdAt.toLocaleString('uz-UZ', { hour12: false })}: ${kpi.value}${kpi.comment ? ' — ' + kpi.comment : ''}`,
+          )
+          .join('\n');
         await this.bot.sendMessage(msg.chat.id, `So‘nggi 5 KPI:\n${last}`);
       } catch (err) {
         this.logger.error('MyKPI error', err);
-        await this.bot.sendMessage(msg.chat.id, `Xatolik: ${(err && err.message) || 'Noma’lum xato'}`);
+        await this.bot.sendMessage(
+          msg.chat.id,
+          `Xatolik: ${(err && err.message) || 'Noma’lum xato'}`,
+        );
       }
     });
 
@@ -225,14 +310,20 @@ export class TelegramBotProvider implements OnModuleInit {
     this.bot.onText(/\/kpi_stats/, async (msg) => {
       const telegramId = String(msg.from?.id);
       try {
-        const user = await this.userService.findByTelegramId(telegramId);
+        const user = await /* this.userService. */ findByTelegramId(telegramId);
         if (!user) {
-          await this.bot.sendMessage(msg.chat.id, 'Siz ro‘yxatdan o‘tmagansiz! Avval /register yuboring.');
+          await this.bot.sendMessage(
+            msg.chat.id,
+            'Siz ro‘yxatdan o‘tmagansiz! Avval /register yuboring.',
+          );
           return;
         }
         const stats = await this.kpiAnalyticsService.getUserStats(user.id);
         if (!stats) {
-          await this.bot.sendMessage(msg.chat.id, 'Sizda hali KPI statistikasi yo‘q. KPI yuborish uchun: /kpi <qiymat> <izoh>');
+          await this.bot.sendMessage(
+            msg.chat.id,
+            'Sizda hali KPI statistikasi yo‘q. KPI yuborish uchun: /kpi <qiymat> <izoh>',
+          );
           return;
         }
         const resp =
@@ -245,92 +336,171 @@ export class TelegramBotProvider implements OnModuleInit {
         await this.bot.sendMessage(msg.chat.id, resp);
       } catch (err) {
         this.logger.error('KPI Stats error', err);
-        await this.bot.sendMessage(msg.chat.id, `Xatolik: ${(err && err.message) || 'Noma’lum xato'}`);
+        await this.bot.sendMessage(
+          msg.chat.id,
+          `Xatolik: ${(err && err.message) || 'Noma’lum xato'}`,
+        );
       }
     });
 
     // /view_kpi command (SUPERVISOR/ADMIN)
-    this.bot.onText(/\/view_kpi(?:\s+(@\w+|\d+))?(?:\s+(\d+))?/i, async (msg, match) => {
-      const telegramId = String(msg.from?.id);
-      try {
-        const caller = await this.userService.findByTelegramId(telegramId);
-        if (!caller) {
-          await this.bot.sendMessage(msg.chat.id, 'Siz ro‘yxatdan o‘tmagansiz! Avval /register yuboring.');
-          return;
-        }
-        const callerRole = await this.userService.getUserRole(caller.telegramId, String(msg.chat.id));
-      if (!callerRole || !['SUPERVISOR', 'ADMIN'].includes(String(callerRole))) {
-          await this.bot.sendMessage(msg.chat.id, 'Bu buyruq faqat SUPERVISOR yoki ADMIN uchun!');
-          return;
-        }
-        const target = match && match[1] ? match[1] : null;
-        const limit = match && match[2] ? parseInt(match[2], 10) : 5;
-        let user = null;
-        if (target) {
-          if (target.startsWith('@')) {
-            user = await this.userService.findByTelegramIdOrUsername(target.slice(1));
-          } else if (/^\d+$/.test(target)) {
-            user = await this.userService.findOne(Number(target));
+    this.bot.onText(
+      /\/view_kpi(?:\s+(@\w+|\d+))?(?:\s+(\d+))?/i,
+      async (msg, match) => {
+        const telegramId = String(msg.from?.id);
+        try {
+          const caller =
+            await /* this.userService. */ findByTelegramId(telegramId);
+          if (!caller) {
+            await this.bot.sendMessage(
+              msg.chat.id,
+              'Siz ro‘yxatdan o‘tmagansiz! Avval /register yuboring.',
+            );
+            return;
           }
+          const callerRole = await /* this.userService. */ getUserRole(
+            caller.telegramId,
+            String(msg.chat.id),
+          );
+          if (
+            !callerRole ||
+            !['SUPERVISOR', 'ADMIN'].includes(String(callerRole))
+          ) {
+            await this.bot.sendMessage(
+              msg.chat.id,
+              'Bu buyruq faqat SUPERVISOR yoki ADMIN uchun!',
+            );
+            return;
+          }
+          const target = match && match[1] ? match[1] : null;
+          const limit = match && match[2] ? parseInt(match[2], 10) : 5;
+          let user = null;
+          if (target) {
+            if (target.startsWith('@')) {
+              user = await /* this.userService. */ findByTelegramIdOrUsername(
+                target.slice(1),
+              );
+            } else if (/^\d+$/.test(target)) {
+              user = await /* this.userService. */ findOne(Number(target));
+            }
+          }
+          if (!user) {
+            await this.bot.sendMessage(
+              msg.chat.id,
+              'Foydalanuvchi topilmadi. Username yoki user_id ni to‘g‘ri kiriting.',
+            );
+            return;
+          }
+          const kpis = await this.kpiService.findByUser(user.id);
+          if (!kpis.length) {
+            await this.bot.sendMessage(
+              msg.chat.id,
+              `@${user.username || user.telegramId} uchun KPI topilmadi.`,
+            );
+            return;
+          }
+          const last = kpis
+            .slice(0, limit)
+            .map(
+              (kpi) =>
+                `#${kpi.id} | ${kpi.createdAt.toLocaleString('uz-UZ', { hour12: false })}: ${kpi.value}${kpi.comment ? ' — ' + kpi.comment : ''}`,
+            )
+            .join('\n');
+          await this.bot.sendMessage(
+            msg.chat.id,
+            `@${user.username || user.telegramId} so‘nggi ${limit} KPI:\n${last}`,
+          );
+        } catch (err) {
+          this.logger.error('ViewKPI error', err);
+          await this.bot.sendMessage(
+            msg.chat.id,
+            `Xatolik: ${(err && err.message) || 'Noma’lum xato'}`,
+          );
         }
-        if (!user) {
-          await this.bot.sendMessage(msg.chat.id, 'Foydalanuvchi topilmadi. Username yoki user_id ni to‘g‘ri kiriting.');
-          return;
-        }
-        const kpis = await this.kpiService.findByUser(user.id);
-        if (!kpis.length) {
-          await this.bot.sendMessage(msg.chat.id, `@${user.username || user.telegramId} uchun KPI topilmadi.`);
-          return;
-        }
-        const last = kpis.slice(0, limit).map(kpi =>
-          `#${kpi.id} | ${kpi.createdAt.toLocaleString('uz-UZ', { hour12: false })}: ${kpi.value}${kpi.comment ? ' — ' + kpi.comment : ''}`
-        ).join('\n');
-        await this.bot.sendMessage(msg.chat.id, `@${user.username || user.telegramId} so‘nggi ${limit} KPI:\n${last}`);
-      } catch (err) {
-        this.logger.error('ViewKPI error', err);
-        await this.bot.sendMessage(msg.chat.id, `Xatolik: ${(err && err.message) || 'Noma’lum xato'}`);
-      }
-    });
+      },
+    );
 
     // /kpi_stats_all command (SUPERVISOR/ADMIN)
     this.bot.onText(/\/kpi_stats_all/, async (msg) => {
       const telegramId = String(msg.from?.id);
       try {
-        const caller = await this.userService.findByTelegramId(telegramId);
+        const caller =
+          await /* this.userService. */ findByTelegramId(telegramId);
         if (!caller) {
-          await this.bot.sendMessage(msg.chat.id, 'Siz ro‘yxatdan o‘tmagansiz! Avval /register yuboring.');
+          await this.bot.sendMessage(
+            msg.chat.id,
+            'Siz ro‘yxatdan o‘tmagansiz! Avval /register yuboring.',
+          );
           return;
         }
-        const callerRole = await this.userService.getUserRole(caller.telegramId, String(msg.chat.id));
-      if (!callerRole || !['SUPERVISOR', 'ADMIN'].includes(String(callerRole))) {
-          await this.bot.sendMessage(msg.chat.id, 'Bu buyruq faqat SUPERVISOR yoki ADMIN uchun!');
-          return;
-        }
-        const allUsers = await this.userService.findAll();
-        const userStats = await Promise.all(
-          allUsers.map(async u => ({
-            user: u,
-            stats: await this.kpiAnalyticsService.getUserStats(u.id)
-          }))
+        const callerRole = await /* this.userService. */ getUserRole(
+          caller.telegramId,
+          String(msg.chat.id),
         );
-        const statsWithData = userStats.filter(us => us.stats && us.stats.count > 0);
-        if (!statsWithData.length) {
-          await this.bot.sendMessage(msg.chat.id, 'Hech bir foydalanuvchida KPI statistikasi yo‘q.');
+        if (
+          !callerRole ||
+          !['SUPERVISOR', 'ADMIN'].includes(String(callerRole))
+        ) {
+          await this.bot.sendMessage(
+            msg.chat.id,
+            'Bu buyruq faqat SUPERVISOR yoki ADMIN uchun!',
+          );
           return;
         }
-        const allKpis = statsWithData.flatMap(us => us.stats ? Array(us.stats.count).fill(us.stats.weekAvg ?? 0) : []);
-        const overallAvg = (allKpis.length ? allKpis.reduce((a, b) => a + b, 0) / allKpis.length : null);
-        const top = [...statsWithData].sort((a, b) => ((b.stats?.weekAvg ?? 0) - (a.stats?.weekAvg ?? 0))).slice(0, 3);
-        const bottom = [...statsWithData].sort((a, b) => ((a.stats?.weekAvg ?? 0) - (b.stats?.weekAvg ?? 0))).slice(0, 3);
+        const allUsers = await /* this.userService. */ findAll();
+        const userStats = await Promise.all(
+          allUsers.map(async (u) => ({
+            user: u,
+            stats: await this.kpiAnalyticsService.getUserStats(u.id),
+          })),
+        );
+        const statsWithData = userStats.filter(
+          (us) => us.stats && us.stats.count > 0,
+        );
+        if (!statsWithData.length) {
+          await this.bot.sendMessage(
+            msg.chat.id,
+            'Hech bir foydalanuvchida KPI statistikasi yo‘q.',
+          );
+          return;
+        }
+        const allKpis = statsWithData.flatMap((us) =>
+          us.stats ? Array(us.stats.count).fill(us.stats.weekAvg ?? 0) : [],
+        );
+        const overallAvg = allKpis.length
+          ? allKpis.reduce((a, b) => a + b, 0) / allKpis.length
+          : null;
+        const top = [...statsWithData]
+          .sort((a, b) => (b.stats?.weekAvg ?? 0) - (a.stats?.weekAvg ?? 0))
+          .slice(0, 3);
+        const bottom = [...statsWithData]
+          .sort((a, b) => (a.stats?.weekAvg ?? 0) - (b.stats?.weekAvg ?? 0))
+          .slice(0, 3);
         const resp =
           `📊 Umumiy KPI statistikasi:\n` +
           `Umumiy haftalik o‘rtacha: ${overallAvg !== null ? overallAvg.toFixed(2) : '-'}\n` +
-          `Eng yaxshi 3: ` + top.map(t => `@${t.user.username || t.user.telegramId} (${t.stats?.weekAvg?.toFixed(2) ?? '-'})`).join(', ') + '\n' +
-          `Eng yomon 3: ` + bottom.map(t => `@${t.user.username || t.user.telegramId} (${t.stats?.weekAvg?.toFixed(2) ?? '-'})`).join(', ');
+          `Eng yaxshi 3: ` +
+          top
+            .map(
+              (t) =>
+                `@${t.user.username || t.user.telegramId} (${t.stats?.weekAvg?.toFixed(2) ?? '-'})`,
+            )
+            .join(', ') +
+          '\n' +
+          `Eng yomon 3: ` +
+          bottom
+            .map(
+              (t) =>
+                `@${t.user.username || t.user.telegramId} (${t.stats?.weekAvg?.toFixed(2) ?? '-'})`,
+            )
+            .join(', ');
         await this.bot.sendMessage(msg.chat.id, resp);
       } catch (err) {
         this.logger.error('KPI Stats All error', err);
-        await this.bot.sendMessage(msg.chat.id, `Xatolik: ${(err && err.message) || 'Noma’lum xato'}`);
+        await this.bot.sendMessage(
+          msg.chat.id,
+          `Xatolik: ${(err && err.message) || 'Noma’lum xato'}`,
+        );
       }
     });
 
@@ -338,32 +508,53 @@ export class TelegramBotProvider implements OnModuleInit {
     this.bot.onText(/\/kpi_stats\s+(@\w+|\d+)/i, async (msg, match) => {
       const telegramId = String(msg.from?.id);
       try {
-        const caller = await this.userService.findByTelegramId(telegramId);
+        const caller =
+          await /* this.userService. */ findByTelegramId(telegramId);
         if (!caller) {
-          await this.bot.sendMessage(msg.chat.id, 'Siz ro‘yxatdan o‘tmagansiz! Avval /register yuboring.');
+          await this.bot.sendMessage(
+            msg.chat.id,
+            'Siz ro‘yxatdan o‘tmagansiz! Avval /register yuboring.',
+          );
           return;
         }
-        const callerRole = await this.userService.getUserRole(caller.telegramId, String(msg.chat.id));
-      if (!callerRole || !['SUPERVISOR', 'ADMIN'].includes(String(callerRole))) {
-          await this.bot.sendMessage(msg.chat.id, 'Bu buyruq faqat SUPERVISOR yoki ADMIN uchun!');
+        const callerRole = await /* this.userService. */ getUserRole(
+          caller.telegramId,
+          String(msg.chat.id),
+        );
+        if (
+          !callerRole ||
+          !['SUPERVISOR', 'ADMIN'].includes(String(callerRole))
+        ) {
+          await this.bot.sendMessage(
+            msg.chat.id,
+            'Bu buyruq faqat SUPERVISOR yoki ADMIN uchun!',
+          );
           return;
         }
         const target = match && match[1] ? match[1] : null;
         let user = null;
         if (target) {
           if (target.startsWith('@')) {
-            user = await this.userService.findByTelegramIdOrUsername(target.slice(1));
+            user = await /* this.userService. */ findByTelegramIdOrUsername(
+              target.slice(1),
+            );
           } else if (/^\d+$/.test(target)) {
-            user = await this.userService.findOne(Number(target));
+            user = await /* this.userService. */ findOne(Number(target));
           }
         }
         if (!user) {
-          await this.bot.sendMessage(msg.chat.id, 'Foydalanuvchi topilmadi. Username yoki user_id ni to‘g‘ri kiriting.');
+          await this.bot.sendMessage(
+            msg.chat.id,
+            'Foydalanuvchi topilmadi. Username yoki user_id ni to‘g‘ri kiriting.',
+          );
           return;
         }
         const stats = await this.kpiAnalyticsService.getUserStats(user.id);
         if (!stats) {
-          await this.bot.sendMessage(msg.chat.id, `@${user.username || user.telegramId} uchun KPI statistikasi yo‘q.`);
+          await this.bot.sendMessage(
+            msg.chat.id,
+            `@${user.username || user.telegramId} uchun KPI statistikasi yo‘q.`,
+          );
           return;
         }
         const resp =
@@ -376,7 +567,10 @@ export class TelegramBotProvider implements OnModuleInit {
         await this.bot.sendMessage(msg.chat.id, resp);
       } catch (err) {
         this.logger.error('KPI Stats user error', err);
-        await this.bot.sendMessage(msg.chat.id, `Xatolik: ${(err && err.message) || 'Noma’lum xato'}`);
+        await this.bot.sendMessage(
+          msg.chat.id,
+          `Xatolik: ${(err && err.message) || 'Noma’lum xato'}`,
+        );
       }
     });
 
@@ -384,37 +578,65 @@ export class TelegramBotProvider implements OnModuleInit {
     this.bot.onText(/\/top_kpi(?:\s+(\d+))?/i, async (msg, match) => {
       const telegramId = String(msg.from?.id);
       try {
-        const caller = await this.userService.findByTelegramId(telegramId);
+        const caller =
+          await /* this.userService. */ findByTelegramId(telegramId);
         if (!caller) {
-          await this.bot.sendMessage(msg.chat.id, 'Siz ro‘yxatdan o‘tmagansiz! Avval /register yuboring.');
+          await this.bot.sendMessage(
+            msg.chat.id,
+            'Siz ro‘yxatdan o‘tmagansiz! Avval /register yuboring.',
+          );
           return;
         }
-        const callerRole = await this.userService.getUserRole(caller.telegramId, String(msg.chat.id));
-      if (!callerRole || !['SUPERVISOR', 'ADMIN'].includes(String(callerRole))) {
-          await this.bot.sendMessage(msg.chat.id, 'Bu buyruq faqat SUPERVISOR yoki ADMIN uchun!');
+        const callerRole = await /* this.userService. */ getUserRole(
+          caller.telegramId,
+          String(msg.chat.id),
+        );
+        if (
+          !callerRole ||
+          !['SUPERVISOR', 'ADMIN'].includes(String(callerRole))
+        ) {
+          await this.bot.sendMessage(
+            msg.chat.id,
+            'Bu buyruq faqat SUPERVISOR yoki ADMIN uchun!',
+          );
           return;
         }
         const n = match && match[1] ? parseInt(match[1], 10) : 3;
-        const allUsers = await this.userService.findAll();
+        const allUsers = await /* this.userService. */ findAll();
         const userStats = await Promise.all(
-          allUsers.map(async u => ({
+          allUsers.map(async (u) => ({
             user: u,
-            stats: await this.kpiAnalyticsService.getUserStats(u.id)
-          }))
+            stats: await this.kpiAnalyticsService.getUserStats(u.id),
+          })),
         );
-        const statsWithData = userStats.filter(us => us.stats && us.stats.count > 0);
+        const statsWithData = userStats.filter(
+          (us) => us.stats && us.stats.count > 0,
+        );
         if (!statsWithData.length) {
-          await this.bot.sendMessage(msg.chat.id, 'Hech bir foydalanuvchida KPI statistikasi yo‘q.');
+          await this.bot.sendMessage(
+            msg.chat.id,
+            'Hech bir foydalanuvchida KPI statistikasi yo‘q.',
+          );
           return;
         }
-        const top = [...statsWithData].sort((a, b) => ((b.stats?.weekAvg ?? 0) - (a.stats?.weekAvg ?? 0))).slice(0, n);
+        const top = [...statsWithData]
+          .sort((a, b) => (b.stats?.weekAvg ?? 0) - (a.stats?.weekAvg ?? 0))
+          .slice(0, n);
         const resp =
           `🏆 Eng yaxshi ${n} foydalanuvchi (haftalik o‘rtacha KPI):\n` +
-          top.map((t, i) => `${i + 1}. @${t.user.username || t.user.telegramId} — ${t.stats?.weekAvg?.toFixed(2) ?? '-'}`).join('\n');
+          top
+            .map(
+              (t, i) =>
+                `${i + 1}. @${t.user.username || t.user.telegramId} — ${t.stats?.weekAvg?.toFixed(2) ?? '-'}`,
+            )
+            .join('\n');
         await this.bot.sendMessage(msg.chat.id, resp);
       } catch (err) {
         this.logger.error('TopKPI error', err);
-        await this.bot.sendMessage(msg.chat.id, `Xatolik: ${(err && err.message) || 'Noma’lum xato'}`);
+        await this.bot.sendMessage(
+          msg.chat.id,
+          `Xatolik: ${(err && err.message) || 'Noma’lum xato'}`,
+        );
       }
     });
 
@@ -422,151 +644,257 @@ export class TelegramBotProvider implements OnModuleInit {
     this.bot.onText(/\/bottom_kpi(?:\s+(\d+))?/i, async (msg, match) => {
       const telegramId = String(msg.from?.id);
       try {
-        const caller = await this.userService.findByTelegramId(telegramId);
+        const caller =
+          await /* this.userService. */ findByTelegramId(telegramId);
         if (!caller) {
-          await this.bot.sendMessage(msg.chat.id, 'Siz ro‘yxatdan o‘tmagansiz! Avval /register yuboring.');
+          await this.bot.sendMessage(
+            msg.chat.id,
+            'Siz ro‘yxatdan o‘tmagansiz! Avval /register yuboring.',
+          );
           return;
         }
-        const callerRole = await this.userService.getUserRole(caller.telegramId, String(msg.chat.id));
-      if (!callerRole || !['SUPERVISOR', 'ADMIN'].includes(String(callerRole))) {
-          await this.bot.sendMessage(msg.chat.id, 'Bu buyruq faqat SUPERVISOR yoki ADMIN uchun!');
+        const callerRole = await /* this.userService. */ getUserRole(
+          caller.telegramId,
+          String(msg.chat.id),
+        );
+        if (
+          !callerRole ||
+          !['SUPERVISOR', 'ADMIN'].includes(String(callerRole))
+        ) {
+          await this.bot.sendMessage(
+            msg.chat.id,
+            'Bu buyruq faqat SUPERVISOR yoki ADMIN uchun!',
+          );
           return;
         }
         const n = match && match[1] ? parseInt(match[1], 10) : 3;
-        const allUsers = await this.userService.findAll();
+        const allUsers = await /* this.userService. */ findAll();
         const userStats = await Promise.all(
-          allUsers.map(async u => ({
+          allUsers.map(async (u) => ({
             user: u,
-            stats: await this.kpiAnalyticsService.getUserStats(u.id)
-          }))
+            stats: await this.kpiAnalyticsService.getUserStats(u.id),
+          })),
         );
-        const statsWithData = userStats.filter(us => us.stats && us.stats.count > 0);
+        const statsWithData = userStats.filter(
+          (us) => us.stats && us.stats.count > 0,
+        );
         if (!statsWithData.length) {
-          await this.bot.sendMessage(msg.chat.id, 'Hech bir foydalanuvchida KPI statistikasi yo‘q.');
+          await this.bot.sendMessage(
+            msg.chat.id,
+            'Hech bir foydalanuvchida KPI statistikasi yo‘q.',
+          );
           return;
         }
-        const bottom = [...statsWithData].sort((a, b) => ((a.stats?.weekAvg ?? 0) - (b.stats?.weekAvg ?? 0))).slice(0, n);
+        const bottom = [...statsWithData]
+          .sort((a, b) => (a.stats?.weekAvg ?? 0) - (b.stats?.weekAvg ?? 0))
+          .slice(0, n);
         const resp =
           `🔻 Eng past ${n} foydalanuvchi (haftalik o‘rtacha KPI):\n` +
-          bottom.map((t, i) => `${i + 1}. @${t.user.username || t.user.telegramId} — ${t.stats?.weekAvg?.toFixed(2) ?? '-'}`).join('\n');
+          bottom
+            .map(
+              (t, i) =>
+                `${i + 1}. @${t.user.username || t.user.telegramId} — ${t.stats?.weekAvg?.toFixed(2) ?? '-'}`,
+            )
+            .join('\n');
         await this.bot.sendMessage(msg.chat.id, resp);
       } catch (err) {
         this.logger.error('BottomKPI error', err);
-        await this.bot.sendMessage(msg.chat.id, `Xatolik: ${(err && err.message) || 'Noma’lum xato'}`);
+        await this.bot.sendMessage(
+          msg.chat.id,
+          `Xatolik: ${(err && err.message) || 'Noma’lum xato'}`,
+        );
       }
     });
 
     // /edit_kpi <kpi_id> <qiymat> [izoh] [sababi] (SUPERVISOR/ADMIN)
-    this.bot.onText(/\/edit_kpi\s+(\d+)\s+([\d,.]+)(?:\s+([^\n]+?))?(?:\s+\[(.+)\])?$/i, async (msg, match) => {
-      const telegramId = String(msg.from?.id);
-      try {
-        const caller = await this.userService.findByTelegramId(telegramId);
-        if (!caller) {
-          await this.bot.sendMessage(msg.chat.id, 'Siz ro‘yxatdan o‘tmagansiz! Avval /register yuboring.');
-          return;
+    this.bot.onText(
+      /\/edit_kpi\s+(\d+)\s+([\d,.]+)(?:\s+([^\n]+?))?(?:\s+\[(.+)\])?$/i,
+      async (msg, match) => {
+        const telegramId = String(msg.from?.id);
+        try {
+          const caller =
+            await /* this.userService. */ findByTelegramId(telegramId);
+          if (!caller) {
+            await this.bot.sendMessage(
+              msg.chat.id,
+              'Siz ro‘yxatdan o‘tmagansiz! Avval /register yuboring.',
+            );
+            return;
+          }
+          const callerRole = await /* this.userService. */ getUserRole(
+            caller.telegramId,
+            String(msg.chat.id),
+          );
+          if (
+            !callerRole ||
+            !['SUPERVISOR', 'ADMIN'].includes(String(callerRole))
+          ) {
+            await this.bot.sendMessage(
+              msg.chat.id,
+              'Bu buyruq faqat SUPERVISOR yoki ADMIN uchun!',
+            );
+            return;
+          }
+          if (!match) return;
+          const kpiId = Number(match[1]);
+          const value = parseFloat(match[2].replace(',', '.'));
+          const comment = match && match[3] ? match[3].trim() : undefined;
+          const reason = match && match[4] ? match[4].trim() : undefined;
+          const kpi = await this.kpiService.findById(kpiId);
+          if (!kpi) {
+            await this.bot.sendMessage(
+              msg.chat.id,
+              `KPI topilmadi (id=${kpiId}).`,
+            );
+            return;
+          }
+          const oldValue = kpi.value;
+          const oldComment = kpi.comment;
+          const updated = await this.kpiService.updateKpi(
+            kpiId,
+            value,
+            comment,
+          );
+          await this.auditLogService.logEdit({
+            kpiId,
+            performedBy: caller.id,
+            oldValue,
+            oldComment: oldComment ?? '',
+            newValue: value,
+            newComment: comment ?? '',
+            reason,
+          });
+          await this.bot.sendMessage(
+            msg.chat.id,
+            `KPI #${kpiId} muvaffaqiyatli tahrirlandi.`,
+          );
+        } catch (err) {
+          this.logger.error('EditKPI error', err);
+          await this.bot.sendMessage(
+            msg.chat.id,
+            `Xatolik: ${(err && err.message) || 'Noma’lum xato'}`,
+          );
         }
-        const callerRole = await this.userService.getUserRole(caller.telegramId, String(msg.chat.id));
-      if (!callerRole || !['SUPERVISOR', 'ADMIN'].includes(String(callerRole))) {
-          await this.bot.sendMessage(msg.chat.id, 'Bu buyruq faqat SUPERVISOR yoki ADMIN uchun!');
-          return;
-        }
-        if (!match) return;
-        const kpiId = Number(match[1]);
-        const value = parseFloat(match[2].replace(',', '.'));
-        const comment = match && match[3] ? match[3].trim() : undefined;
-        const reason = match && match[4] ? match[4].trim() : undefined;
-        const kpi = await this.kpiService.findById(kpiId);
-        if (!kpi) {
-          await this.bot.sendMessage(msg.chat.id, `KPI topilmadi (id=${kpiId}).`);
-          return;
-        }
-        const oldValue = kpi.value;
-        const oldComment = kpi.comment;
-        const updated = await this.kpiService.updateKpi(kpiId, value, comment);
-        await this.auditLogService.logEdit({
-          kpiId,
-          performedBy: caller.id,
-          oldValue,
-          oldComment: oldComment ?? '',
-          newValue: value,
-          newComment: comment ?? '',
-          reason,
-        });
-        await this.bot.sendMessage(msg.chat.id, `KPI #${kpiId} muvaffaqiyatli tahrirlandi.`);
-      } catch (err) {
-        this.logger.error('EditKPI error', err);
-        await this.bot.sendMessage(msg.chat.id, `Xatolik: ${(err && err.message) || 'Noma’lum xato'}`);
-      }
-    });
+      },
+    );
 
     // /delete_kpi <kpi_id> [sababi] (SUPERVISOR/ADMIN)
-    this.bot.onText(/\/delete_kpi\s+(\d+)(?:\s+\[(.+)\])?$/i, async (msg, match) => {
-      const telegramId = String(msg.from?.id);
-      try {
-        const caller = await this.userService.findByTelegramId(telegramId);
-        if (!caller) {
-          await this.bot.sendMessage(msg.chat.id, 'Siz ro‘yxatdan o‘tmagansiz! Avval /register yuboring.');
-          return;
+    this.bot.onText(
+      /\/delete_kpi\s+(\d+)(?:\s+\[(.+)\])?$/i,
+      async (msg, match) => {
+        const telegramId = String(msg.from?.id);
+        try {
+          const caller =
+            await /* this.userService. */ findByTelegramId(telegramId);
+          if (!caller) {
+            await this.bot.sendMessage(
+              msg.chat.id,
+              'Siz ro‘yxatdan o‘tmagansiz! Avval /register yuboring.',
+            );
+            return;
+          }
+          const callerRole = await /* this.userService. */ getUserRole(
+            caller.telegramId,
+            String(msg.chat.id),
+          );
+          if (
+            !callerRole ||
+            !['SUPERVISOR', 'ADMIN'].includes(String(callerRole))
+          ) {
+            await this.bot.sendMessage(
+              msg.chat.id,
+              'Bu buyruq faqat SUPERVISOR yoki ADMIN uchun!',
+            );
+            return;
+          }
+          if (!match) return;
+          const kpiId = Number(match[1]);
+          const reason = match[2]?.trim();
+          const kpi = await this.kpiService.findById(kpiId);
+          if (!kpi) {
+            await this.bot.sendMessage(
+              msg.chat.id,
+              `KPI topilmadi (id=${kpiId}).`,
+            );
+            return;
+          }
+          await this.kpiService.deleteKpi(kpiId);
+          await this.auditLogService.logDelete({
+            kpiId,
+            performedBy: caller.id,
+            oldValue: kpi.value,
+            oldComment: kpi.comment ?? '',
+            reason,
+          });
+          await this.bot.sendMessage(
+            msg.chat.id,
+            `KPI #${kpiId} muvaffaqiyatli o‘chirildi.`,
+          );
+        } catch (err) {
+          this.logger.error('DeleteKPI error', err);
+          await this.bot.sendMessage(
+            msg.chat.id,
+            `Xatolik: ${(err && err.message) || 'Noma’lum xato'}`,
+          );
         }
-        const callerRole = await this.userService.getUserRole(caller.telegramId, String(msg.chat.id));
-      if (!callerRole || !['SUPERVISOR', 'ADMIN'].includes(String(callerRole))) {
-          await this.bot.sendMessage(msg.chat.id, 'Bu buyruq faqat SUPERVISOR yoki ADMIN uchun!');
-          return;
-        }
-        if (!match) return;
-        const kpiId = Number(match[1]);
-        const reason = match[2]?.trim();
-        const kpi = await this.kpiService.findById(kpiId);
-        if (!kpi) {
-          await this.bot.sendMessage(msg.chat.id, `KPI topilmadi (id=${kpiId}).`);
-          return;
-        }
-        await this.kpiService.deleteKpi(kpiId);
-        await this.auditLogService.logDelete({
-          kpiId,
-          performedBy: caller.id,
-          oldValue: kpi.value,
-          oldComment: kpi.comment ?? '',
-          reason,
-        });
-        await this.bot.sendMessage(msg.chat.id, `KPI #${kpiId} muvaffaqiyatli o‘chirildi.`);
-      } catch (err) {
-        this.logger.error('DeleteKPI error', err);
-        await this.bot.sendMessage(msg.chat.id, `Xatolik: ${(err && err.message) || 'Noma’lum xato'}`);
-      }
-    });
+      },
+    );
 
     // /audit_log <kpi_id> (SUPERVISOR/ADMIN)
     this.bot.onText(/\/audit_log\s+(\d+)/i, async (msg, match) => {
       const telegramId = String(msg.from?.id);
       try {
-        const caller = await this.userService.findByTelegramId(telegramId);
+        const caller =
+          await /* this.userService. */ findByTelegramId(telegramId);
         if (!caller) {
-          await this.bot.sendMessage(msg.chat.id, 'Siz ro‘yxatdan o‘tmagansiz! Avval /register yuboring.');
+          await this.bot.sendMessage(
+            msg.chat.id,
+            'Siz ro‘yxatdan o‘tmagansiz! Avval /register yuboring.',
+          );
           return;
         }
-        const callerRole = await this.userService.getUserRole(caller.telegramId, String(msg.chat.id));
-      if (!callerRole || !['SUPERVISOR', 'ADMIN'].includes(String(callerRole))) {
-          await this.bot.sendMessage(msg.chat.id, 'Bu buyruq faqat SUPERVISOR yoki ADMIN uchun!');
+        const callerRole = await /* this.userService. */ getUserRole(
+          caller.telegramId,
+          String(msg.chat.id),
+        );
+        if (
+          !callerRole ||
+          !['SUPERVISOR', 'ADMIN'].includes(String(callerRole))
+        ) {
+          await this.bot.sendMessage(
+            msg.chat.id,
+            'Bu buyruq faqat SUPERVISOR yoki ADMIN uchun!',
+          );
           return;
         }
         if (!match) return;
         const kpiId = Number(match[1]);
         const logs = await this.auditLogService.findByKpiId(kpiId);
         if (!logs.length) {
-          await this.bot.sendMessage(msg.chat.id, `KPI #${kpiId} uchun audit log topilmadi.`);
+          await this.bot.sendMessage(
+            msg.chat.id,
+            `KPI #${kpiId} uchun audit log topilmadi.`,
+          );
           return;
         }
-        const resp = logs.map(log =>
-          `[${log.createdAt.toLocaleString('uz-UZ', { hour12: false })}] ${log.action.toUpperCase()} by user #${log.performedBy}\n` +
-          `Old: ${log.oldValue} ${log.oldComment || ''}\n` +
-          (log.action === 'edit' ? `New: ${log.newValue} ${log.newComment || ''}\n` : '') +
-          (log.reason ? `Sabab: ${log.reason}` : '')
-        ).join('\n---\n');
+        const resp = logs
+          .map(
+            (log) =>
+              `[${log.createdAt.toLocaleString('uz-UZ', { hour12: false })}] ${log.action.toUpperCase()} by user #${log.performedBy}\n` +
+              `Old: ${log.oldValue} ${log.oldComment || ''}\n` +
+              (log.action === 'edit'
+                ? `New: ${log.newValue} ${log.newComment || ''}\n`
+                : '') +
+              (log.reason ? `Sabab: ${log.reason}` : ''),
+          )
+          .join('\n---\n');
         await this.bot.sendMessage(msg.chat.id, resp);
       } catch (err) {
         this.logger.error('AuditLog error', err);
-        await this.bot.sendMessage(msg.chat.id, `Xatolik: ${(err && err.message) || 'Noma’lum xato'}`);
+        await this.bot.sendMessage(
+          msg.chat.id,
+          `Xatolik: ${(err && err.message) || 'Noma’lum xato'}`,
+        );
       }
     });
 
@@ -574,14 +902,27 @@ export class TelegramBotProvider implements OnModuleInit {
     this.bot.onText(/\/audit_log_last(?:\s+(\d+))?/i, async (msg, match) => {
       const telegramId = String(msg.from?.id);
       try {
-        const caller = await this.userService.findByTelegramId(telegramId);
+        const caller =
+          await /* this.userService. */ findByTelegramId(telegramId);
         if (!caller) {
-          await this.bot.sendMessage(msg.chat.id, 'Siz ro‘yxatdan o‘tmagansiz! Avval /register yuboring.');
+          await this.bot.sendMessage(
+            msg.chat.id,
+            'Siz ro‘yxatdan o‘tmagansiz! Avval /register yuboring.',
+          );
           return;
         }
-        const callerRole = await this.userService.getUserRole(caller.telegramId, String(msg.chat.id));
-      if (!callerRole || !['SUPERVISOR', 'ADMIN'].includes(String(callerRole))) {
-          await this.bot.sendMessage(msg.chat.id, 'Bu buyruq faqat SUPERVISOR yoki ADMIN uchun!');
+        const callerRole = await /* this.userService. */ getUserRole(
+          caller.telegramId,
+          String(msg.chat.id),
+        );
+        if (
+          !callerRole ||
+          !['SUPERVISOR', 'ADMIN'].includes(String(callerRole))
+        ) {
+          await this.bot.sendMessage(
+            msg.chat.id,
+            'Bu buyruq faqat SUPERVISOR yoki ADMIN uchun!',
+          );
           return;
         }
         const n = match && match[1] ? parseInt(match[1], 10) : 10;
@@ -590,16 +931,24 @@ export class TelegramBotProvider implements OnModuleInit {
           await this.bot.sendMessage(msg.chat.id, 'Audit loglar topilmadi.');
           return;
         }
-        const resp = logs.map(log =>
-          `#${log.kpiId} [${log.createdAt.toLocaleString('uz-UZ', { hour12: false })}] ${log.action.toUpperCase()} by user #${log.performedBy}\n` +
-          `Old: ${log.oldValue} ${log.oldComment || ''}\n` +
-          (log.action === 'edit' ? `New: ${log.newValue} ${log.newComment || ''}\n` : '') +
-          (log.reason ? `Sabab: ${log.reason}` : '')
-        ).join('\n---\n');
+        const resp = logs
+          .map(
+            (log) =>
+              `#${log.kpiId} [${log.createdAt.toLocaleString('uz-UZ', { hour12: false })}] ${log.action.toUpperCase()} by user #${log.performedBy}\n` +
+              `Old: ${log.oldValue} ${log.oldComment || ''}\n` +
+              (log.action === 'edit'
+                ? `New: ${log.newValue} ${log.newComment || ''}\n`
+                : '') +
+              (log.reason ? `Sabab: ${log.reason}` : ''),
+          )
+          .join('\n---\n');
         await this.bot.sendMessage(msg.chat.id, resp);
       } catch (err) {
         this.logger.error('AuditLogLast error', err);
-        await this.bot.sendMessage(msg.chat.id, `Xatolik: ${(err && err.message) || 'Noma’lum xato'}`);
+        await this.bot.sendMessage(
+          msg.chat.id,
+          `Xatolik: ${(err && err.message) || 'Noma’lum xato'}`,
+        );
       }
     });
 
@@ -607,24 +956,45 @@ export class TelegramBotProvider implements OnModuleInit {
     this.bot.onText(/\/review_ai_assessment\s+(\d+)/i, async (msg, match) => {
       const telegramId = String(msg.from?.id);
       try {
-        const caller = await this.userService.findByTelegramId(telegramId);
+        const caller =
+          await /* this.userService. */ findByTelegramId(telegramId);
         if (!caller) {
-          await this.bot.sendMessage(msg.chat.id, 'Siz ro‘yxatdan o‘tmagansiz! Avval /register yuboring.');
+          await this.bot.sendMessage(
+            msg.chat.id,
+            'Siz ro‘yxatdan o‘tmagansiz! Avval /register yuboring.',
+          );
           return;
         }
-        const callerRole = await this.userService.getUserRole(caller.telegramId, String(msg.chat.id));
-      if (!callerRole || !['SUPERVISOR', 'ADMIN'].includes(String(callerRole))) {
-          await this.bot.sendMessage(msg.chat.id, 'Bu buyruq faqat SUPERVISOR yoki ADMIN uchun!');
+        const callerRole = await /* this.userService. */ getUserRole(
+          caller.telegramId,
+          String(msg.chat.id),
+        );
+        if (
+          !callerRole ||
+          !['SUPERVISOR', 'ADMIN'].includes(String(callerRole))
+        ) {
+          await this.bot.sendMessage(
+            msg.chat.id,
+            'Bu buyruq faqat SUPERVISOR yoki ADMIN uchun!',
+          );
           return;
         }
         const id = match && match[1] ? Number(match[1]) : undefined;
         if (!id) {
-          await this.bot.sendMessage(msg.chat.id, 'AI natija ID ni kiriting: /review_ai_assessment <id>');
+          await this.bot.sendMessage(
+            msg.chat.id,
+            'AI natija ID ni kiriting: /review_ai_assessment <id>',
+          );
           return;
         }
-        const res = await fetch(`${process.env.API_BASE_URL || 'http://localhost:3000'}/ai-analysis-result/${id}`);
+        const res = await fetch(
+          `${process.env.API_BASE_URL || 'http://localhost:3000'}/ai-analysis-result/${id}`,
+        );
         if (!res.ok) {
-          await this.bot.sendMessage(msg.chat.id, `Natija topilmadi (id=${id}).`);
+          await this.bot.sendMessage(
+            msg.chat.id,
+            `Natija topilmadi (id=${id}).`,
+          );
           return;
         }
         const aiResult = await res.json();
@@ -635,26 +1005,53 @@ export class TelegramBotProvider implements OnModuleInit {
         await this.bot.sendMessage(msg.chat.id, msgText);
       } catch (err) {
         this.logger.error('ReviewAI error', err);
-        await this.bot.sendMessage(msg.chat.id, `Xatolik: ${(err && err.message) || 'Noma’lum xato'}`);
+        await this.bot.sendMessage(
+          msg.chat.id,
+          `Xatolik: ${(err && err.message) || 'Noma’lum xato'}`,
+        );
       }
     });
 
     // Log all group messages
     this.bot.on('message', async (msg: any) => {
-      if (!msg.chat || (msg.chat.type !== 'group' && msg.chat.type !== 'supergroup')) return;
+      if (
+        !msg.chat ||
+        (msg.chat.type !== 'group' && msg.chat.type !== 'supergroup')
+      )
+        return;
       try {
-        const user = await this.userService.findByTelegramId(String(msg.from?.id));
-        const senderRole = (user ? await this.userService.getUserRole(user.telegramId, String(msg.chat.id)) : 'UNKNOWN') || 'UNKNOWN';
+        const user = await /* this.userService. */ findByTelegramId(
+          String(msg.from?.id),
+        );
+        const senderRole =
+          (user
+            ? await /* this.userService. */ getUserRole(
+                user.telegramId,
+                String(msg.chat.id),
+              )
+            : 'UNKNOWN') || 'UNKNOWN';
         await this.messageLogService.logMessage({
           telegramMessageId: msg.message_id,
           telegramChatId: msg.chat.id,
           senderTelegramId: String(msg.from?.id),
-          senderRoleAtMoment: (user ? await this.userService.getUserRole(user.telegramId, String(msg.chat.id)) : 'UNKNOWN') || 'UNKNOWN',
+          senderRoleAtMoment:
+            (user
+              ? await /* this.userService. */ getUserRole(
+                  user.telegramId,
+                  String(msg.chat.id),
+                )
+              : 'UNKNOWN') || 'UNKNOWN',
           sentAt: new Date(msg.date * 1000),
           textContent: msg.text,
           isReplyToMessageId: msg.reply_to_message?.message_id,
           hasAttachments: !!(msg.document || msg.photo || msg.voice),
-          attachmentType: msg.document ? 'file' : msg.photo ? 'photo' : msg.voice ? 'voice' : undefined,
+          attachmentType: msg.document
+            ? 'file'
+            : msg.photo
+              ? 'photo'
+              : msg.voice
+                ? 'voice'
+                : undefined,
         });
       } catch (err) {
         this.logger?.error?.('MessageLog error', err);

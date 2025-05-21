@@ -20,6 +20,6 @@ import { UserModule } from '../features/user-management/user.module';
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy, JwtAuthGuard],
-  exports: [AuthService]
+  exports: [AuthService],
 })
 export class AuthModule {}

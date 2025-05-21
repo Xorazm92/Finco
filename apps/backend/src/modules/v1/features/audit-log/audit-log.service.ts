@@ -10,7 +10,12 @@ export class AuditLogService {
     private readonly auditLogRepo: Repository<AuditLogEntity>,
   ) {}
 
-  async logAction(action: string, performedBy: string, affectedUser?: string, details?: any) {
+  async logAction(
+    action: string,
+    performedBy: string,
+    affectedUser?: string,
+    details?: any,
+  ) {
     const log = this.auditLogRepo.create({
       action,
       performedBy,

@@ -40,7 +40,10 @@ export class PenaltyService {
   }
 
   async remove(id: number, performedBy?: number) {
-    const penalty = await this.penaltyRepo.findOne({ where: { id }, relations: ['user', 'company'] });
+    const penalty = await this.penaltyRepo.findOne({
+      where: { id },
+      relations: ['user', 'company'],
+    });
     const result = await this.penaltyRepo.delete(id);
     if (penalty && penalty.user && penalty.company && penalty.amount) {
       await this.auditLogService.logPenalty({

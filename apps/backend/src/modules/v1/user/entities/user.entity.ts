@@ -1,4 +1,10 @@
-import { Entity, PrimaryGeneratedColumn, Column, Index, OneToMany } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  Index,
+  OneToMany,
+} from 'typeorm';
 import { UserChatRoleEntity } from './user-chat-role.entity';
 import { UserRole } from '../../../shared/enums/user-role.enum';
 import { UserCompanyAssignmentEntity } from '../../company/entities/user-company-assignment.entity';
@@ -19,7 +25,13 @@ export class UserEntity {
   lastName?: string;
 
   @Index({ unique: true })
-  @Column({ name: 'username', type: 'varchar', length: 100, unique: true, nullable: true })
+  @Column({
+    name: 'username',
+    type: 'varchar',
+    length: 100,
+    unique: true,
+    nullable: true,
+  })
   username?: string;
 
   @Column({ name: 'password', type: 'varchar', length: 255, nullable: true })
@@ -35,12 +47,21 @@ export class UserEntity {
   @Column({ name: 'base_salary', type: 'float', nullable: true })
   baseSalary?: number;
 
-  @OneToMany(() => UserCompanyAssignmentEntity, assignment => assignment.user)
+  @OneToMany(() => UserCompanyAssignmentEntity, (assignment) => assignment.user)
   assignments: UserCompanyAssignmentEntity[];
 
-  @Column({ name: 'created_at', type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  @Column({
+    name: 'created_at',
+    type: 'timestamp',
+    default: () => 'CURRENT_TIMESTAMP',
+  })
   createdAt: Date;
 
-  @Column({ name: 'updated_at', type: 'timestamp', default: () => 'CURRENT_TIMESTAMP', onUpdate: 'CURRENT_TIMESTAMP' })
+  @Column({
+    name: 'updated_at',
+    type: 'timestamp',
+    default: () => 'CURRENT_TIMESTAMP',
+    onUpdate: 'CURRENT_TIMESTAMP',
+  })
   updatedAt: Date;
 }

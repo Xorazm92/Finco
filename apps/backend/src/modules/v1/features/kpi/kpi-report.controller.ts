@@ -11,7 +11,13 @@ export class KpiReportController {
   }
 
   @Get('trend')
-  async getKpiTrend(@Query('chatId') chatId: string, @Query('weeks') weeks = 4) {
-    return this.kpiReportService.getWeeklyKpiTrend(Number(chatId), Number(weeks));
+  async getKpiTrend(
+    @Query('chatId') chatId: string,
+    @Query('weeks') weeks = 4,
+  ) {
+    return this.kpiReportService.getWeeklyKpiTrend(
+      Number(chatId),
+      Number(weeks),
+    );
   }
 }

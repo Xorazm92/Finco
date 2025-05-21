@@ -24,14 +24,16 @@ export class KpiReportService {
       const weekEnd = new Date(weekStart);
       weekEnd.setDate(weekStart.getDate() + 7);
 
-      const totalQuestions = await this.messageLogRepo.createQueryBuilder('msg')
+      const totalQuestions = await this.messageLogRepo
+        .createQueryBuilder('msg')
         .where('msg.telegramChatId = :chatId', { chatId })
         .andWhere('msg.isQuestion = true')
         .andWhere('msg.sentAt >= :start', { start: weekStart })
         .andWhere('msg.sentAt < :end', { end: weekEnd })
         .getCount();
 
-      const answeredQuestions = await this.messageLogRepo.createQueryBuilder('msg')
+      const answeredQuestions = await this.messageLogRepo
+        .createQueryBuilder('msg')
         .where('msg.telegramChatId = :chatId', { chatId })
         .andWhere('msg.isQuestion = true')
         .andWhere('msg.questionStatus = :status', { status: 'ANSWERED' })
@@ -43,10 +45,14 @@ export class KpiReportService {
         week: `${weekStart.toISOString().slice(0, 10)} - ${weekEnd.toISOString().slice(0, 10)}`,
         totalQuestions,
         answeredQuestions,
-        unansweredPercent: totalQuestions === 0 ? 0 : Math.round(100 * (totalQuestions - answeredQuestions) / totalQuestions),
+        unansweredPercent:
+          totalQuestions === 0
+            ? 0
+            : Math.round(
+                (100 * (totalQuestions - answeredQuestions)) / totalQuestions,
+              ),
       });
     }
     return trend;
   }
 }
-

@@ -33,16 +33,43 @@ export class PayrollController {
     @Query('period') period: string,
   ) {
     const user = await this.userService.findOne(userId);
-    const assignment = await this.assignmentService.findByUserAndCompany(userId, companyId);
-    const kpiScores = await this.kpiCalculationService.getUserKpiScoresForPeriod(userId, companyId, period);
+    const assignment = await this.assignmentService.findByUserAndCompany(
+      userId,
+      companyId,
+    );
+    const kpiScores =
+      await this.kpiCalculationService.getUserKpiScoresForPeriod(
+        userId,
+        companyId,
+        period,
+      );
     // Fetch bonuses, advances, and penalties
-    const bonusesArr = await this.bonusService.findByUserAndCompany(userId, companyId);
-    const advancesArr = await this.advanceService.findByUserAndCompany(userId, companyId);
-    const penaltiesArr = await this.penaltyService.findByUserAndCompany(userId, companyId);
-    const bonuses = bonusesArr.reduce((sum: number, b) => sum + (b.amount || 0), 0);
-    const advances = advancesArr.reduce((sum: number, a) => sum + (a.amount || 0), 0);
-    const penalties = penaltiesArr.reduce((sum: number, p) => sum + (p.amount || 0), 0);
-    if (!assignment) throw new Error('Assignment not found for user and company');
+    const bonusesArr = await this.bonusService.findByUserAndCompany(
+      userId,
+      companyId,
+    );
+    const advancesArr = await this.advanceService.findByUserAndCompany(
+      userId,
+      companyId,
+    );
+    const penaltiesArr = await this.penaltyService.findByUserAndCompany(
+      userId,
+      companyId,
+    );
+    const bonuses = bonusesArr.reduce(
+      (sum: number, b) => sum + (b.amount || 0),
+      0,
+    );
+    const advances = advancesArr.reduce(
+      (sum: number, a) => sum + (a.amount || 0),
+      0,
+    );
+    const penalties = penaltiesArr.reduce(
+      (sum: number, p) => sum + (p.amount || 0),
+      0,
+    );
+    if (!assignment)
+      throw new Error('Assignment not found for user and company');
     return this.payrollService.calculatePayroll({
       user,
       assignment,

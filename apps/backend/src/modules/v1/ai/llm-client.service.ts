@@ -14,7 +14,11 @@ export class LlmClientService {
     });
   }
 
-  async generate(prompt: string, model?: string, params?: Record<string, any>): Promise<string> {
+  async generate(
+    prompt: string,
+    model?: string,
+    params?: Record<string, any>,
+  ): Promise<string> {
     const reqModel = model || aiConfig.defaultModel;
     const reqParams = { ...aiConfig.defaultParams, ...params };
     try {

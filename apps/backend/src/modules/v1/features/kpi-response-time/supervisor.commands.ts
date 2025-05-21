@@ -24,7 +24,7 @@ export class SupervisorCommands {
     const pending = await this.messageLogRepo.find({
       where: {
         telegramChatId: chatId,
-        questionStatus: "PENDING",
+        questionStatus: 'PENDING',
       },
     });
     if (!pending.length) return ctx.reply('Noaniq matching holatlari yo‘q.');
@@ -45,11 +45,11 @@ export class SupervisorCommands {
       where: {
         telegramChatId: chatId,
         telegramMessageId: Number(messageId),
-        questionStatus: "PENDING",
+        questionStatus: 'PENDING',
       },
     });
     if (!log) return ctx.reply('Topilmadi yoki allaqachon tasdiqlangan.');
-    log.questionStatus = "ANSWERED";
+    log.questionStatus = 'ANSWERED';
     await this.messageLogRepo.save(log);
     ctx.reply('Matching tasdiqlandi.');
   }
@@ -64,11 +64,11 @@ export class SupervisorCommands {
       where: {
         telegramChatId: chatId,
         telegramMessageId: Number(messageId),
-        questionStatus: "PENDING",
+        questionStatus: 'PENDING',
       },
     });
     if (!log) return ctx.reply('Topilmadi yoki allaqachon rad etilgan.');
-    log.questionStatus = "TIMEOUT";
+    log.questionStatus = 'TIMEOUT';
     await this.messageLogRepo.save(log);
     ctx.reply('Matching rad etildi.');
   }

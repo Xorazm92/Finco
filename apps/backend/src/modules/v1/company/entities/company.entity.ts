@@ -15,6 +15,9 @@ export class CompanyEntity {
   @Column({ name: 'nds_status', default: false })
   ndsStatus: boolean;
 
-  @OneToMany(() => UserCompanyAssignmentEntity, assignment => assignment.company)
+  @OneToMany(
+    () => UserCompanyAssignmentEntity,
+    (assignment) => assignment.company,
+  )
   assignments: UserCompanyAssignmentEntity[];
 }

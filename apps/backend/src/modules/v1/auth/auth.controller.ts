@@ -10,11 +10,22 @@ export class AuthController {
 
   @Post('login')
   @ApiOperation({ summary: 'Login with username and password' })
-  @ApiBody({ schema: { properties: { username: { type: 'string' }, password: { type: 'string' } } } })
+  @ApiBody({
+    schema: {
+      properties: {
+        username: { type: 'string' },
+        password: { type: 'string' },
+      },
+    },
+  })
   @ApiResponse({ status: 201, description: 'Login successful' })
   @ApiResponse({ status: 400, description: 'Bad request' })
   async login(@Body() body: { username: string; password: string }) {
-    if (!body || typeof body.username !== 'string' || typeof body.password !== 'string') {
+    if (
+      !body ||
+      typeof body.username !== 'string' ||
+      typeof body.password !== 'string'
+    ) {
       return { statusCode: 400, message: 'username va password majburiy!' };
     }
     return this.authService.login(body.username, body.password);

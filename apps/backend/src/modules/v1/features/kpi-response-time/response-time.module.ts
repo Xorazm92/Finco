@@ -7,7 +7,10 @@ import { UserEntity } from '../user-management/entities/user.entity';
 import { UserModule } from '../user-management/user.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([MessageLogEntity, UserEntity]), UserModule],
+  imports: [
+    TypeOrmModule.forFeature([MessageLogEntity, UserEntity]),
+    UserModule,
+  ],
   providers: [ResponseTimeService, MessageListener],
   exports: [ResponseTimeService],
 })

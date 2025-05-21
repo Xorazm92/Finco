@@ -8,7 +8,11 @@ import { UserEntity } from '../user-management/entities/user.entity';
 @Injectable()
 export class KpiCalculationService {
   // Fetch all KPI scores for a user, company, and period (e.g. '2024-05')
-  async getUserKpiScoresForPeriod(userId: number, companyId: number, period: string) {
+  async getUserKpiScoresForPeriod(
+    userId: number,
+    companyId: number,
+    period: string,
+  ) {
     // Parse period to get start and end dates
     const [year, month] = period.split('-').map(Number);
     const start = new Date(year, month - 1, 1);
@@ -49,10 +53,17 @@ export class KpiCalculationService {
       },
     });
     const totalQuestions = questions.length;
-    const unanswered = questions.filter(q => q.questionStatus !== 'ANSWERED');
-    const unansweredPercent = totalQuestions ? Math.round((unanswered.length / totalQuestions) * 100) : 0;
-    const answered = questions.filter(q => q.questionStatus === 'ANSWERED');
-    const avgResponseTime = answered.length ? Math.round(answered.reduce((a, b) => a + (b.responseTimeSeconds || 0), 0) / answered.length) : null;
+    const unanswered = questions.filter((q) => q.questionStatus !== 'ANSWERED');
+    const unansweredPercent = totalQuestions
+      ? Math.round((unanswered.length / totalQuestions) * 100)
+      : 0;
+    const answered = questions.filter((q) => q.questionStatus === 'ANSWERED');
+    const avgResponseTime = answered.length
+      ? Math.round(
+          answered.reduce((a, b) => a + (b.responseTimeSeconds || 0), 0) /
+            answered.length,
+        )
+      : null;
     return {
       totalQuestions,
       unansweredQuestions: unanswered.length,
@@ -69,16 +80,24 @@ export class KpiCalculationService {
     const fromDate = new Date(now.getTime() - periodDays * 24 * 60 * 60 * 1000);
     const questions = await this.messageLogRepo.find({
       where: {
-        telegramChatId: typeof chatId === 'string' ? parseInt(chatId, 10) : chatId,
+        telegramChatId:
+          typeof chatId === 'string' ? parseInt(chatId, 10) : chatId,
         isQuestion: true,
         sentAt: fromDate <= now ? fromDate : now,
       },
     });
     const totalQuestions = questions.length;
-    const unanswered = questions.filter(q => q.questionStatus !== 'ANSWERED');
-    const unansweredPercent = totalQuestions ? Math.round((unanswered.length / totalQuestions) * 100) : 0;
-    const answered = questions.filter(q => q.questionStatus === 'ANSWERED');
-    const avgResponseTime = answered.length ? Math.round(answered.reduce((a, b) => a + (b.responseTimeSeconds || 0), 0) / answered.length) : null;
+    const unanswered = questions.filter((q) => q.questionStatus !== 'ANSWERED');
+    const unansweredPercent = totalQuestions
+      ? Math.round((unanswered.length / totalQuestions) * 100)
+      : 0;
+    const answered = questions.filter((q) => q.questionStatus === 'ANSWERED');
+    const avgResponseTime = answered.length
+      ? Math.round(
+          answered.reduce((a, b) => a + (b.responseTimeSeconds || 0), 0) /
+            answered.length,
+        )
+      : null;
     return {
       totalQuestions,
       unansweredQuestions: unanswered.length,
@@ -100,10 +119,17 @@ export class KpiCalculationService {
       },
     });
     const totalQuestions = questions.length;
-    const unanswered = questions.filter(q => q.questionStatus !== 'ANSWERED');
-    const unansweredPercent = totalQuestions ? Math.round((unanswered.length / totalQuestions) * 100) : 0;
-    const answered = questions.filter(q => q.questionStatus === 'ANSWERED');
-    const avgResponseTime = answered.length ? Math.round(answered.reduce((a, b) => a + (b.responseTimeSeconds || 0), 0) / answered.length) : null;
+    const unanswered = questions.filter((q) => q.questionStatus !== 'ANSWERED');
+    const unansweredPercent = totalQuestions
+      ? Math.round((unanswered.length / totalQuestions) * 100)
+      : 0;
+    const answered = questions.filter((q) => q.questionStatus === 'ANSWERED');
+    const avgResponseTime = answered.length
+      ? Math.round(
+          answered.reduce((a, b) => a + (b.responseTimeSeconds || 0), 0) /
+            answered.length,
+        )
+      : null;
     return {
       totalQuestions,
       unansweredQuestions: unanswered.length,

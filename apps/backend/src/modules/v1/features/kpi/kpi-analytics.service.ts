@@ -13,12 +13,15 @@ export class KpiAnalyticsService {
     const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
     const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
-    const weekKpi = kpis.filter(k => k.createdAt >= weekAgo);
-    const monthKpi = kpis.filter(k => k.createdAt >= monthAgo);
+    const weekKpi = kpis.filter((k) => k.createdAt >= weekAgo);
+    const monthKpi = kpis.filter((k) => k.createdAt >= monthAgo);
 
-    const avg = (arr: typeof kpis) => arr.length ? arr.reduce((a, b) => a + b.value, 0) / arr.length : null;
-    const max = (arr: typeof kpis) => arr.length ? Math.max(...arr.map(k => k.value)) : null;
-    const min = (arr: typeof kpis) => arr.length ? Math.min(...arr.map(k => k.value)) : null;
+    const avg = (arr: typeof kpis) =>
+      arr.length ? arr.reduce((a, b) => a + b.value, 0) / arr.length : null;
+    const max = (arr: typeof kpis) =>
+      arr.length ? Math.max(...arr.map((k) => k.value)) : null;
+    const min = (arr: typeof kpis) =>
+      arr.length ? Math.min(...arr.map((k) => k.value)) : null;
 
     // Trend: oxirgi 2 KPI ni solishtirish
     let trend = null;

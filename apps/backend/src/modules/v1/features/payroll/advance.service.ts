@@ -40,7 +40,10 @@ export class AdvanceService {
   }
 
   async remove(id: number, performedBy?: number) {
-    const advance = await this.advanceRepo.findOne({ where: { id }, relations: ['user', 'company'] });
+    const advance = await this.advanceRepo.findOne({
+      where: { id },
+      relations: ['user', 'company'],
+    });
     const result = await this.advanceRepo.delete(id);
     if (advance && advance.user && advance.company && advance.amount) {
       await this.auditLogService.logAdvance({
