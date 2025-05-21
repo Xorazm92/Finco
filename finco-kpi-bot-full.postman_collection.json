@@ -1,0 +1,210 @@
+{
+  "info": {
+    "_postman_id": "finco-kpi-bot-collection-full-001",
+    "name": "FinCo KPI Bot FULL API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Login (JWT)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"parol123\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/api/auth/login",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["api", "auth", "login"]
+        }
+      }
+    },
+    {
+      "name": "KPI: User KPI",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+        ],
+        "url": {
+          "raw": "http://localhost:3000/kpi/user/6368348552?days=30",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["kpi", "user", "6368348552"],
+          "query": [
+            { "key": "days", "value": "30" }
+          ]
+        }
+      }
+    },
+    {
+      "name": "KPI: Group KPI",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+        ],
+        "url": {
+          "raw": "http://localhost:3000/kpi/group/123456?days=30",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["kpi", "group", "123456"],
+          "query": [
+            { "key": "days", "value": "30" }
+          ]
+        }
+      }
+    },
+    {
+      "name": "KPI: Summary KPI",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+        ],
+        "url": {
+          "raw": "http://localhost:3000/kpi/summary?days=30",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["kpi", "summary"],
+          "query": [
+            { "key": "days", "value": "30" }
+          ]
+        }
+      }
+    },
+    {
+      "name": "KPI: Dashboard Stats",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+        ],
+        "url": {
+          "raw": "http://localhost:3000/api/kpi/dashboard?chatId=123456",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["api", "kpi", "dashboard"],
+          "query": [
+            { "key": "chatId", "value": "123456" }
+          ]
+        }
+      }
+    },
+    {
+      "name": "KPI: Trend",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+        ],
+        "url": {
+          "raw": "http://localhost:3000/api/kpi/trend?chatId=123456&weeks=4",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["api", "kpi", "trend"],
+          "query": [
+            { "key": "chatId", "value": "123456" },
+            { "key": "weeks", "value": "4" }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Payroll: Calculate Payroll",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+        ],
+        "url": {
+          "raw": "http://localhost:3000/payroll/calculate?userId=1&companyId=1&period=2025-05",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["payroll", "calculate"],
+          "query": [
+            { "key": "userId", "value": "1" },
+            { "key": "companyId", "value": "1" },
+            { "key": "period", "value": "2025-05" }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Payroll: Payroll Report",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+        ],
+        "url": {
+          "raw": "http://localhost:3000/payroll/report?userId=1&companyId=1&period=2025-05",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["payroll", "report"],
+          "query": [
+            { "key": "userId", "value": "1" },
+            { "key": "companyId", "value": "1" },
+            { "key": "period", "value": "2025-05" }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Advance: Get All",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+        ],
+        "url": {
+          "raw": "http://localhost:3000/advance",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["advance"]
+        }
+      }
+    },
+    {
+      "name": "Advance: Create",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{jwt_token}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"userId\": 1,\n  \"amount\": 200000,\n  \"reason\": \"Avans uchun\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/advance",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["advance"]
+        }
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "jwt_token",
+      "value": ""
+    }
+  ]
+}
