@@ -1,6 +1,8 @@
 import { Controller, Get, Post, Delete, Body, Param, Query } from '@nestjs/common';
 import { BonusService } from './bonus.service';
 
+import { ApiBody } from '@nestjs/swagger';
+
 @Controller('bonus')
 export class BonusController {
   constructor(private readonly bonusService: BonusService) {}
@@ -12,6 +14,7 @@ export class BonusController {
   }
 
   @Post()
+  @ApiBody({ schema: { example: { userId: 1, amount: 500000, reason: 'Yaxshi ish uchun bonus' } } })
   async create(@Body() data: any) {
     return this.bonusService.create(data);
   }

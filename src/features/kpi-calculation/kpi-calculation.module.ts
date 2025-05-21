@@ -4,7 +4,7 @@ import { KpiScoreEntity } from './entities/kpi-score.entity';
 import { UserEntity } from '../user-management/entities/user.entity';
 import { KpiCalculationService } from './kpi-calculation.service';
 
-import { MessageLogEntity } from '../kpi-response-time/entities/message-log.entity';
+import { MessageLogEntity } from '../message-log/entities/message-log.entity';
 
 import { ReportSubmissionModule } from '../kpi-report-submission/report-submission.module';
 import { ReportLogEntity } from '../kpi-report-submission/entities/report-log.entity';

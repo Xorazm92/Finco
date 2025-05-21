@@ -9,15 +9,23 @@ export class HumanFeedbackController {
 
   @Post('add')
   @ApiOperation({ summary: 'Add human feedback for AI analysis result' })
-  @ApiBody({ schema: {
-    properties: {
-      aiAnalysisResultId: { type: 'number' },
-      reviewerTelegramId: { type: 'string' },
-      verdict: { type: 'string', enum: ['approved', 'rejected', 'corrected'] },
-      comment: { type: 'string' }
-    },
-    required: ['aiAnalysisResultId', 'verdict']
-  }})
+  @ApiBody({
+    schema: {
+      example: {
+        aiAnalysisResultId: 1,
+        reviewerTelegramId: '123456789',
+        verdict: 'approved',
+        comment: 'AI natijasi to‘g‘ri.'
+      },
+      properties: {
+        aiAnalysisResultId: { type: 'number', example: 1 },
+        reviewerTelegramId: { type: 'string', example: '123456789' },
+        verdict: { type: 'string', enum: ['approved', 'rejected', 'corrected'], example: 'approved' },
+        comment: { type: 'string', example: "AI natijasi to‘g‘ri." }
+      },
+      required: ['aiAnalysisResultId', 'verdict']
+    }
+  })
   @ApiResponse({ status: 201, description: 'Feedback added' })
   async addFeedback(@Body() dto: {
     aiAnalysisResultId: number;

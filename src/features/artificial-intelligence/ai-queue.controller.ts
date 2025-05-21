@@ -9,7 +9,12 @@ export class AiQueueController {
 
   @Post('sentiment')
   @ApiOperation({ summary: 'Queue a sentiment analysis job' })
-  @ApiBody({ schema: { properties: { text: { type: 'string' } } } })
+  @ApiBody({
+    schema: {
+      example: { text: 'Bu xabarni analiz qiling.' },
+      properties: { text: { type: 'string', example: 'Bu xabarni analiz qiling.' } }
+    }
+  })
   @ApiResponse({ status: 201, description: 'Job queued' })
   async queueSentiment(@Body('text') text: string) {
     if (!text) return { error: 'text body param required' };

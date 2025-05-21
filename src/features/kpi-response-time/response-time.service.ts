@@ -1,14 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { MessageLogEntity, MessageStatus } from './entities/message-log.entity';
+import { MessageLogEntity } from '../message-log/entities/message-log.entity';
 import { UserEntity } from '../user-management/entities/user.entity';
 import { UserRole } from '../../shared/enums/user-role.enum';
 import { KPI_CONFIG } from '../../config/kpi.config';
 import { UserService } from '../user-management/user.service';
+import { Logger } from '@nestjs/common';
 
 @Injectable()
 export class ResponseTimeService {
+  private readonly logger = new Logger(ResponseTimeService.name);
   constructor(
     @InjectRepository(MessageLogEntity)
     private readonly messageLogRepo: Repository<MessageLogEntity>,
@@ -42,147 +44,131 @@ export class ResponseTimeService {
   }
 
   async processMessage(message: any, ctx: any) {
-    // Userni bazaga qo‘shish yoki olish (chatId bo'yicha)
-    let user = await this.userRepo.findOne({
-      where: {
-        telegramId: String(message.from.id),
-      },
-    });
-    if (!user) {
-      user = this.userRepo.create({
-        telegramId: String(message.from.id),
-        firstName: message.from.first_name,
-        lastName: message.from.last_name ?? undefined,
-        username: message.from.username ?? undefined,
-        isActive: true,
-      } as Partial<UserEntity>);
-      await this.userRepo.save(user);
-    }
-    // Savol aniqlash
-    const userRoleInChat = await this.userService.getUserRole(
-      String(message.from.id),
-      String(message.chat.id)
-    );
-    const isClientQuestion =
-      userRoleInChat === UserRole.CLIENT && this.isLikelyQuestion(message.text);
-    const questionKeywords = this.extractKeywords(message.text);
-    // MessageLogEntity yaratish
-    const log = this.messageLogRepo.create({
-      telegramMessageId: String(message.message_id),
-      telegramChatId: String(message.chat.id),
-      senderUser: user,
-      senderRoleAtMoment: userRoleInChat ?? undefined,
-      sentAt: new Date(message.date * 1000),
-      textPreview: message.text?.slice(0, 255),
-      isClientQuestion,
-      status: isClientQuestion ? MessageStatus.PENDING_ANSWER : undefined,
-      questionKeywords: isClientQuestion ? questionKeywords : undefined,
-      repliedToMessageId: message.reply_to_message?.message_id
-        ? String(message.reply_to_message.message_id)
-        : undefined,
-    });
-    await this.messageLogRepo.save(log);
-
-    // Reply orqali javob aniqlash
-    if (
-      message.reply_to_message &&
-      [UserRole.ACCOUNTANT, UserRole.BANK_CLIENT, UserRole.SUPERVISOR].includes(
-        (userRoleInChat ?? UserRole.CLIENT)
-      )
-    ) {
-      const original = await this.messageLogRepo.findOne({
+    try {
+      this.logger.log('processMessage called', message);
+      // Userni bazaga qo‘shish yoki olish (chatId bo'yicha)
+      this.logger.debug('Looking up user in DB', { telegramId: message.from?.id, chatId: message.chat?.id });
+      let user = await this.userRepo.findOne({
         where: {
-          telegramMessageId: String(message.reply_to_message.message_id),
-          telegramChatId: String(message.chat.id),
-          isClientQuestion: true,
-          status: MessageStatus.PENDING_ANSWER,
+          telegramId: String(message.from.id),
         },
       });
-      if (original) {
-        const responseTime =
-          (log.sentAt.getTime() - original.sentAt.getTime()) / 1000;
-        original.replyByUser = user;
-        original.replyByRoleAtMoment = userRoleInChat ?? undefined;
-        original.repliedAt = log.sentAt;
-        original.responseTimeSeconds = Math.round(responseTime);
-        original.replyMessageId = log.telegramMessageId;
-        original.replyDetectionMethod = 'REPLY';
-        original.status = MessageStatus.ANSWERED;
-        original.confidenceScore = 1.0;
-        await this.messageLogRepo.save(original);
+      if (!user) {
+        user = this.userRepo.create({
+          telegramId: String(message.from.id),
+          firstName: message.from.first_name,
+          lastName: message.from.last_name ?? undefined,
+          username: message.from.username ?? undefined,
+          isActive: true,
+        } as Partial<UserEntity>);
+        await this.userRepo.save(user);
       }
-      return;
-    }
-
-    // Reply-siz (vaqt oynasi + keyword) javob aniqlash
-    if (
-      [UserRole.ACCOUNTANT, UserRole.BANK_CLIENT, UserRole.SUPERVISOR].includes(
-        (userRoleInChat ?? UserRole.CLIENT)
-      )
-    ) {
-      const T_window = KPI_CONFIG.RESPONSE_TIME_WINDOW_MS;
-      const keywordMatchThreshold = KPI_CONFIG.KEYWORD_MATCH_THRESHOLD;
-      const now = log.sentAt.getTime();
-      const pendingQuestions = await this.messageLogRepo.find({
-        where: {
-          telegramChatId: String(message.chat.id),
-          isClientQuestion: true,
-          status: MessageStatus.PENDING_ANSWER,
-        },
-      });
-      const candidates = pendingQuestions.filter(
-        (q) => now > q.sentAt.getTime() && now - q.sentAt.getTime() <= T_window,
+      // Savol aniqlash
+      const userRoleInChat = await this.userService.getUserRole(
+        String(message.from.id),
+        String(message.chat.id)
       );
-      if (candidates.length === 1) {
-        // Faqat bitta savol - avtomatik bog'lash
-        const q = candidates[0];
-        const responseTime = (log.sentAt.getTime() - q.sentAt.getTime()) / 1000;
-        q.replyByUser = user;
-        q.replyByRoleAtMoment = userRoleInChat ?? undefined;
-        q.repliedAt = log.sentAt;
-        q.responseTimeSeconds = Math.round(responseTime);
-        q.replyMessageId = log.telegramMessageId;
-        q.replyDetectionMethod = 'TIME_WINDOW_SINGLE_PENDING';
-        q.status = MessageStatus.ANSWERED;
-        q.confidenceScore = 0.8;
-        await this.messageLogRepo.save(q);
-        return;
-      } else if (candidates.length > 1) {
-        // Bir nechta savol - keyword match orqali
-        let bestMatch: MessageLogEntity | null = null;
-        let bestScore = 0;
-        for (const q of candidates) {
-          const overlap =
-            q.questionKeywords?.filter((kw) => questionKeywords.includes(kw))
-              .length || 0;
-          if (overlap > bestScore) {
-            bestScore = overlap;
-            bestMatch = q;
-          }
-        }
-        if (bestMatch && bestScore >= keywordMatchThreshold) {
+      const isClientQuestion =
+        userRoleInChat === UserRole.CLIENT && this.isLikelyQuestion(message.text);
+      const questionKeywords = this.extractKeywords(message.text);
+      // MessageLogEntity yaratish
+      const log = this.messageLogRepo.create({
+        telegramMessageId: message.message_id,
+        telegramChatId: message.chat.id,
+        // telegramUserId: message.from.id,
+        // telegramUserName: message.from.username,
+        sentAt: new Date(message.date * 1000),
+        // text: message.text,
+        isReplyToMessageId: message.reply_to_message?.message_id ?? null,
+      });
+      await this.messageLogRepo.save(log);
+
+      // Reply orqali javob aniqlash
+      if (
+        message.reply_to_message &&
+        [UserRole.ACCOUNTANT, UserRole.BANK_CLIENT, UserRole.SUPERVISOR].includes(
+          (userRoleInChat ?? UserRole.CLIENT)
+        )
+      ) {
+        const original = await this.messageLogRepo.findOne({
+          where: {
+            telegramMessageId: message.reply_to_message.message_id,
+            telegramChatId: message.chat.id,
+            questionStatus: "PENDING",
+          },
+        });
+        if (original) {
           const responseTime =
-            (log.sentAt.getTime() - bestMatch.sentAt.getTime()) / 1000;
-          bestMatch.replyByUser = user;
-          bestMatch.replyByRoleAtMoment = userRoleInChat ?? undefined;
-          bestMatch.repliedAt = log.sentAt;
-          bestMatch.responseTimeSeconds = Math.round(responseTime);
-          bestMatch.replyMessageId = log.telegramMessageId;
-          bestMatch.replyDetectionMethod =
-            'TIME_WINDOW_MULTIPLE_PENDING_KEYWORD_MATCH';
-          bestMatch.status = MessageStatus.ANSWERED;
-          bestMatch.confidenceScore = 0.6;
-          await this.messageLogRepo.save(bestMatch);
-          return;
+            (log.sentAt.getTime() - original.sentAt.getTime()) / 1000;
+          original.isReplyToMessageId = log.telegramMessageId;
+          original.questionStatus = "ANSWERED";
+          original.responseTimeSeconds = Math.round(responseTime);
+          await this.messageLogRepo.save(original);
         }
-        // SUPERVISORga signal: noaniq bog'lanish
-        await this.notifySupervisors(message.chat.id, 'Noaniq javob matching holati. Tekshiruv va tasdiqlash kerak.');
+        return;
       }
+
+      // Reply-siz (vaqt oynasi + keyword) javob aniqlash
+      if (
+        [UserRole.ACCOUNTANT, UserRole.BANK_CLIENT, UserRole.SUPERVISOR].includes(
+          (userRoleInChat ?? UserRole.CLIENT)
+        )
+      ) {
+        const T_window = KPI_CONFIG.RESPONSE_TIME_WINDOW_MS;
+        const keywordMatchThreshold = KPI_CONFIG.KEYWORD_MATCH_THRESHOLD;
+        const now = log.sentAt.getTime();
+        const pendingQuestions = await this.messageLogRepo.find({
+          where: {
+            telegramChatId: message.chat.id,
+            questionStatus: "PENDING",
+          },
+        });
+        const candidates = pendingQuestions.filter(
+          (q) => now > q.sentAt.getTime() && now - q.sentAt.getTime() <= T_window,
+        );
+        if (candidates.length === 1) {
+          // Faqat bitta savol - avtomatik bog'lash
+          const q = candidates[0];
+          const responseTime = (log.sentAt.getTime() - q.sentAt.getTime()) / 1000;
+          q.isReplyToMessageId = log.telegramMessageId;
+          q.questionStatus = "ANSWERED";
+          q.responseTimeSeconds = Math.round(responseTime);
+          await this.messageLogRepo.save(q);
+          return;
+        } else if (candidates.length > 1) {
+          // Bir nechta savol - keyword match orqali
+          let bestMatch: MessageLogEntity | null = null;
+          let bestScore = 0;
+          for (const q of candidates) {
+            const overlap = 0;
+            if (overlap > bestScore) {
+              bestScore = overlap;
+              bestMatch = q;
+            }
+          }
+          if (bestMatch && bestScore >= keywordMatchThreshold) {
+            const responseTime =
+              (log.sentAt.getTime() - bestMatch.sentAt.getTime()) / 1000;
+            bestMatch.isReplyToMessageId = log.telegramMessageId;
+            bestMatch.questionStatus = "ANSWERED";
+            bestMatch.responseTimeSeconds = Math.round(responseTime);
+            await this.messageLogRepo.save(bestMatch);
+            return;
+          }
+          // SUPERVISORga signal: noaniq bog'lanish
+          this.logger.warn('Noaniq javob matching holati, supervisor xabardor qilinadi', { chatId: message.chat.id });
+          await this.notifySupervisors(message.chat.id, 'Noaniq javob matching holati. Tekshiruv va tasdiqlash kerak.');
+        }
+      }
+    } catch (error) {
+      this.logger.error('processMessage xatolikka uchradi', error.stack || error.message || error);
+      throw error;
     }
   }
 
   // SUPERVISORga signal yuborish uchun yordamchi metod
   private async notifySupervisors(chatId: string, notification: string) {
+    this.logger.log(`notifySupervisors called for chatId=${chatId}, notification='${notification}'`);
     // Mas’ul SUPERVISORlarni aniqlash (UserChatRoleEntity orqali)
     // TODO: UserChatRoleEntity dan ushbu chat uchun SUPERVISORlarni topib, ularga notification yuboring.
     // Bu yerda TelegramService yoki ctx orqali xabar yuborish mumkin.

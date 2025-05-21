@@ -1,6 +1,8 @@
 import { Controller, Get, Post, Delete, Body, Param, Query } from '@nestjs/common';
 import { AdvanceService } from './advance.service';
 
+import { ApiBody } from '@nestjs/swagger';
+
 @Controller('advance')
 export class AdvanceController {
   constructor(private readonly advanceService: AdvanceService) {}
@@ -12,6 +14,7 @@ export class AdvanceController {
   }
 
   @Post()
+  @ApiBody({ schema: { example: { userId: 1, amount: 200000, reason: 'Avans uchun' } } })
   async create(@Body() data: any) {
     return this.advanceService.create(data);
   }

@@ -46,8 +46,26 @@ export class UserController {
   }
 
   @Post()
-  @ApiOperation({ summary: 'Create new user (ADMIN only)' })
-  @ApiBody({ type: CreateUserDto })
+  @ApiOperation({ summary: 'Create new user (ADMIN only)', description: 'Request must include Bearer JWT token in Authorization header. Only REST clients with admin privileges can use this endpoint.' })
+  @ApiBody({ schema: {
+    example: {
+      telegramId: '123456789',
+      firstName: 'Ali',
+      lastName: 'Valiyev',
+      username: 'ali_valiyev',
+      role: 'ADMIN',
+      password: 'admin123'
+    },
+    properties: {
+      telegramId: { type: 'string', example: '123456789' },
+      firstName: { type: 'string', example: 'Ali' },
+      lastName: { type: 'string', example: 'Valiyev' },
+      username: { type: 'string', example: 'ali_valiyev' },
+      role: { type: 'string', example: 'ADMIN', enum: ['ADMIN', 'SUPERVISOR', 'CLIENT', 'ACCOUNTANT', 'BANK_CLIENT', 'DIRECTOR', 'OTHER_INTERNAL'] },
+      password: { type: 'string', example: 'admin123' }
+    },
+    required: ['telegramId', 'firstName', 'username', 'role', 'password']
+  } })
   @ApiResponse({ status: 201, description: 'User created', type: UserEntity })
   @Roles(UserRole.ADMIN)
   create(@Body() dto: CreateUserDto) {

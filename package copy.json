@@ -1,0 +1,26 @@
+{
+  "dependencies": {
+    "@nestjs/bull": "^11.0.2",
+    "@nestjs/common": "^11.1.1",
+    "@nestjs/core": "^11.1.1",
+    "@nestjs/platform-express": "^11.1.1",
+    "@nestjs/typeorm": "^11.0.0",
+    "bull": "^4.16.5",
+    "pg": "^8.16.0",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2",
+    "typeorm": "^0.3.24"
+  },
+  "devDependencies": {
+    "@types/bull": "^3.15.9",
+    "@types/express": "^5.0.2",
+    "@types/json2csv": "^5.0.7",
+    "@types/node": "^22.15.19",
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0"
+  },
+  "scripts": {
+    "typeorm": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js",
+    "start:dev": "nest start --watch"
+  }
+}

@@ -1,4 +1,4 @@
-import { Controller, Get, Inject } from '@nestjs/common';
+import { Controller, Get, Post, Body, Inject, Logger } from '@nestjs/common';
 import { Ctx, On, Update } from 'nestjs-telegraf';
 import { TelegramService } from './telegram.service';
 import { UserService } from '../user-management/user.service';
@@ -9,12 +9,31 @@ import { Context } from 'telegraf';
 @Controller('telegram')
 @Update()
 export class TelegramController {
+  private readonly logger = new Logger(TelegramController.name);
+
   constructor(
     private readonly telegramService: TelegramService,
     private readonly userService: UserService,
     private readonly messageLogService: MessageLogService,
     private readonly aiQueueService: AiQueueService,
+    @Inject('BullQueue_incoming_messages_queue') private readonly queue?: any, // Bull queue optional for REST
   ) {}
+
+  // REST endpoint: Telegram webhook -> Bull queue
+  @Post('webhook')
+  async handleUpdate(@Body() update: any) {
+    if (!update?.message || !update.message.chat || !update.message.from) {
+      this.logger.warn('Noto‘g‘ri Telegram update:', update);
+      return { ok: false, error: 'Invalid update' };
+    }
+    if (this.queue) {
+      await this.queue.add('incoming', update);
+      this.logger.log(`Xabar queue ga yuborildi: chat_id=${update.message.chat.id}, from_id=${update.message.from.id}`);
+    } else {
+      this.logger.warn('Bull queue mavjud emas, xabar queue ga yuborilmadi!');
+    }
+    return { ok: true };
+  }
 
   @Get('stats')
   getStats() {

@@ -8,7 +8,7 @@ export class MessageLogService {
   constructor(
     @InjectRepository(MessageLogEntity)
     private readonly messageLogRepo: Repository<MessageLogEntity>,
-  ) {}
+  ) { }
 
   async logMessage(data: Partial<MessageLogEntity>): Promise<MessageLogEntity> {
     // Savolni aniqlash: CLIENT va matnda ? yoki savol kalit so'zlari
@@ -115,4 +115,19 @@ export class MessageLogService {
       take: limit,
     });
   }
+
+  async updateMessageLogTranscription(messageLogId: number | string, transcribedText: string): Promise<MessageLogEntity> {
+    const message = await this.messageLogRepo.findOne({ where: { id: Number(messageLogId) } });
+    if (!message) {
+      throw new Error(`MessageLog with ID ${messageLogId} not found.`);
+    }
+    // Update transcribedText (audio transcription)
+    message.transcribed_text = transcribedText;
+    // If message is VOICE type, also update textContent for searchability
+    if (message.attachmentType === 'VOICE' || message.attachmentType === 'AUDIO') {
+      message.textContent = transcribedText;
+    }
+    return this.messageLogRepo.save(message);
+  }
 }
+

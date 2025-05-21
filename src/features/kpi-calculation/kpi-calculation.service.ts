@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { KpiScoreEntity } from './entities/kpi-score.entity';
 import { UserEntity } from '../user-management/entities/user.entity';
-import { MessageLogEntity, MessageStatus } from '../kpi-response-time/entities/message-log.entity';
+import { MessageLogEntity } from '../message-log/entities/message-log.entity';
 
 @Injectable()
 export class KpiCalculationService {
@@ -144,9 +144,9 @@ export class KpiCalculationService {
     // MessageLogEntity repository ni inject qilamiz
     const answered = await this.messageLogRepo.find({
       where: {
-        replyByUser: user,
-        status: MessageStatus.ANSWERED,
-        repliedAt: { $gte: periodStart, $lte: periodEnd } as any, // TypeORM range
+        
+        questionStatus: "ANSWERED",
+        
       },
       relations: ['senderUser', 'replyByUser'],
     });

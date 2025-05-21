@@ -5,6 +5,7 @@ import { MessageLogTimeoutModule } from './features/message-log/message-log-time
 import { MessageLogTimeoutCronModule } from './features/message-log/message-log-timeout-cron.module';
 import { TelegramModule } from './features/telegram-bot/telegram.module';
 import { KpiModule } from './features/kpi/kpi.module';
+import { KpiReportModule } from './features/kpi/kpi-report.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { CoreModule } from './core/core.module';
@@ -29,6 +30,7 @@ import { AuthModule } from './auth/auth.module';
     KpiCalculationModule,
     AuthModule,
     AiModule,
+    KpiReportModule,
   ],
   controllers: [AppController],
   providers: [AppService],
