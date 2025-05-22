@@ -3,9 +3,9 @@ import { AiModule } from './features/artificial-intelligence/ai.module';
 import { MessageLogModule } from './features/message-log/message-log.module';
 import { MessageLogTimeoutModule } from './features/message-log/message-log-timeout.module';
 import { MessageLogTimeoutCronModule } from './features/message-log/message-log-timeout-cron.module';
-import { TelegramModule } from './features/telegram-bot/telegram.module';
 import { KpiModule } from './features/kpi/kpi.module';
 import { KpiReportModule } from './features/kpi/kpi-report.module';
+import { TelegramBotModule } from './features/telegram-bot/telegram.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { CoreModule } from './core/core.module';
@@ -31,6 +31,7 @@ import { AuthModule } from './auth/auth.module';
     AuthModule,
     AiModule,
     KpiReportModule,
+    TelegramBotModule,
   ],
   controllers: [AppController],
   providers: [AppService],
