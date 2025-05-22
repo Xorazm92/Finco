@@ -1,7 +1,10 @@
 # Compiled output
 /dist
-/node_modules
 /build
+
+# Node modules (ignore everywhere)
+node_modules/
+**/node_modules/
 
 # Logs
 logs
