@@ -167,7 +167,7 @@ export class UserService {
   ): Promise<UserChatRoleEntity> {
     let userChatRole = await this.userChatRoleRepository
       .createQueryBuilder('ucr')
-      .where('ucr.user = :userId', { userId })
+      .where('ucr.user.id = :userId', { userId })
       .andWhere('ucr.chatId = :chatId', { chatId })
       .getOne();
     let assignedByUserIdNum: number | undefined = undefined;
