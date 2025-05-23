@@ -7,11 +7,11 @@ export class MessageLogEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ name: 'message_id', type: 'varchar' })
-  messageId: string;
+  @Column({ name: 'telegram_message_id', type: 'varchar' })
+  telegramMessageId: string;
 
-  @Column({ name: 'chat_id', type: 'varchar' })
-  chatId: string;
+  @Column({ name: 'telegram_chat_id', type: 'varchar' })
+  telegramChatId: string;
 
   @Column({ name: 'sender_telegram_id', type: 'varchar', nullable: true })
   senderTelegramId?: string;
@@ -36,9 +36,6 @@ export class MessageLogEntity {
 
   @Column({ name: 'response_time_seconds', type: 'integer', nullable: true })
   responseTimeSeconds?: number;
-
-  @Column({ name: 'answer_method', type: 'varchar', nullable: true })
-  answerMethod?: string;
 
   @Column({ name: 'answer_detection_method', type: 'varchar', nullable: true })
   answerDetectionMethod?: string;
