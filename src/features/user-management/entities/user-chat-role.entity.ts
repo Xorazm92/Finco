@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { UserEntity } from './user.entity';
 import { UserRole } from '../../../shared/enums/user-role.enum';
 
@@ -7,26 +7,13 @@ export class UserChatRoleEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => UserEntity, { nullable: false, onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'user_id' })
-  user: UserEntity;
+  @Column()
+  chatId: number;
 
-  @Column({ name: 'user_id', type: 'int' })
-  userId: number;
-
-  @Column({ name: 'chat_id', type: 'bigint' })
-  chatId: string;
-
-  @Column({
-    type: 'enum',
-    enum: UserRole,
-    default: UserRole.CLIENT,
-  })
+  @Column({ type: 'enum', enum: UserRole, default: UserRole.CLIENT })
   role: UserRole;
 
-  @Column({ name: 'assigned_by_user_id', type: 'int', nullable: true })
-  assignedByUserId?: number;
-
-  @CreateDateColumn({ name: 'assigned_at' })
-  assignedAt: Date;
+  @ManyToOne(() => UserEntity, user => user.chatRoles)
+  @JoinColumn({ name: 'userId' })
+  user: UserEntity;
 }
