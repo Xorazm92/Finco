@@ -17,5 +17,14 @@ export const MessagePatterns = {
   REPORT: {
     GENERATE_REPORT: 'generate_report',
     GET_REPORT_STATUS: 'get_report_status',
+  },
+  AUTH: {
+    LOGIN: 'auth_login',
+    VALIDATE: 'auth_validate',
+    VERIFY: 'auth_verify',
+  },
+  AUDIT: {
+    LOG_ACTION: 'audit_log_action',
+    GET_LOGS: 'get_audit_logs',
   }
 };
