@@ -1,14 +1,31 @@
+
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { KpiEntity } from './entities/kpi.entity';
-import { AuditLogEntity } from './entities/audit-log.entity';
+import { ClientsModule, Transport } from '@nestjs/microservices';
+import { KpiController } from './kpi.controller';
 import { KpiService } from './kpi.service';
-import { KpiAnalyticsService } from './kpi-analytics.service';
-import { AuditLogService } from './audit-log.service';
+import { KpiScoreEntity } from './entities/kpi-score.entity';
+import { MessageLogEntity } from '../message-log/entities/message-log.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([KpiEntity, AuditLogEntity])],
-  providers: [KpiService, KpiAnalyticsService, AuditLogService],
-  exports: [KpiService, KpiAnalyticsService, AuditLogService],
+  imports: [
+    TypeOrmModule.forFeature([KpiScoreEntity, MessageLogEntity]),
+    ClientsModule.register([
+      {
+        name: 'KPI_SERVICE',
+        transport: Transport.RMQ,
+        options: {
+          urls: ['amqp://localhost:5672'],
+          queue: 'kpi_queue',
+          queueOptions: {
+            durable: true
+          },
+        },
+      },
+    ]),
+  ],
+  controllers: [KpiController],
+  providers: [KpiService],
+  exports: [KpiService],
 })
 export class KpiModule {}
