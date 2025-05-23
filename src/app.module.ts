@@ -18,12 +18,16 @@ import { ReportSubmissionModule } from './features/kpi-report-submission/report-
 import { KpiCalculationModule } from './features/kpi-calculation/kpi-calculation.module';
 import { AuthModule } from './auth/auth.module';
 
+
+import { AuditLogModule } from './audit/audit-log.module';
+
 @Module({
   imports: [
     CoreModule,
     DatabaseModule,
     LoggerModule,
     // TelegramModule,
+    
     UserModule,
     ResponseTimeModule,
     ReportSubmissionModule,
@@ -32,6 +36,7 @@ import { AuthModule } from './auth/auth.module';
     AiModule,
     KpiReportModule,
     TelegramBotModule,
+    AuditLogModule,
   ],
   controllers: [AppController],
   providers: [AppService],

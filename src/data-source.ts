@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import { DataSource } from 'typeorm';
-import { UserEntity } from './features/user-management/entities/user.entity';
-import { UserChatRoleEntity } from './features/user-management/entities/user-chat-role.entity';
+import { User } from './modules/user/user.entity';
+import { UserChatRole } from './modules/user/user-chat-role.entity';
 
 // Diagnostika uchun env qiymatlar
 console.log('DB_HOST:', process.env.DB_HOST);
@@ -18,8 +18,8 @@ export const AppDataSource = new DataSource({
   password: process.env.DB_PASSWORD,
   database: process.env.DB_DATABASE,
   entities: [
-    UserEntity,
-    UserChatRoleEntity,
+    User,
+    UserChatRole,
     // boshqa entitylar
   ],
   migrations: [__dirname + '/migrations/*.{ts,js}'],

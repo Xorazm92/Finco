@@ -1,5 +1,5 @@
 import { Controller, Get, Post, Body, Inject, Logger } from '@nestjs/common';
-import { Ctx, On, Update } from 'nestjs-telegraf';
+import { Ctx, On } from 'nestjs-telegraf';
 import { TelegramService } from './telegram.service';
 import { UserService } from '../user-management/user.service';
 import { MessageLogService } from '../message-log/message-log.service';
@@ -7,7 +7,6 @@ import { AiQueueService } from '../artificial-intelligence/ai-queue.service';
 import { Context } from 'telegraf';
 
 @Controller('telegram')
-@Update()
 export class TelegramController {
   private readonly logger = new Logger(TelegramController.name);
 

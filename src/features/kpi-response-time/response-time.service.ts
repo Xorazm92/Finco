@@ -86,7 +86,7 @@ export class ResponseTimeService {
       // Reply orqali javob aniqlash
       if (
         message.reply_to_message &&
-        [UserRole.ACCOUNTANT, UserRole.BANK_CLIENT, UserRole.SUPERVISOR].includes(
+        [UserRole.ACCOUNTANT, UserRole.BANK_CLIENT_SPECIALIST, UserRole.SUPERVISOR].includes(
           (userRoleInChat ?? UserRole.CLIENT)
         )
       ) {
@@ -110,7 +110,7 @@ export class ResponseTimeService {
 
       // Reply-siz (vaqt oynasi + keyword) javob aniqlash
       if (
-        [UserRole.ACCOUNTANT, UserRole.BANK_CLIENT, UserRole.SUPERVISOR].includes(
+        [UserRole.ACCOUNTANT, UserRole.BANK_CLIENT_SPECIALIST, UserRole.SUPERVISOR].includes(
           (userRoleInChat ?? UserRole.CLIENT)
         )
       ) {

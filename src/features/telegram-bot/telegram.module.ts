@@ -1,35 +1,35 @@
 // src/features/telegram-bot/telegram.module.ts
-import { Module, Global } from '@nestjs/common';
+import { Module, Global, forwardRef } from '@nestjs/common';
 import { TelegrafModule } from 'nestjs-telegraf';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { TelegramUpdate } from './telegram.update'; // To'g'ri import yo'li
-import { TelegramService } from './telegram.service';   // To'g'ri import yo'li
-import { UserModule } from '../user-management/user.module'; // UserService ni olish uchun
-// Boshqa kerakli modullarni import qiling, masalan:
-import { ResponseTimeModule } from '../kpi-response-time/response-time.module';
-import { AiQueueModule } from '../artificial-intelligence/ai-queue.module';
-// ... va hokazo, TelegramUpdate ichida ishlatiladigan barcha servislar tegishli modullardan olinishi kerak
+import { TelegramUpdate } from './telegram.update';
+import { TelegramService } from './telegram.service';
+import { UserModule } from '../user-management/user.module';
+import { MessageLoggingModule } from '../../modules/message-logging/message-logging.module';
+import { ResponseTimeTrackingModule } from '../../modules/response-time-tracking/response-time-tracking.module';
+import { HumanFeedbackModule } from '../artificial-intelligence/human-feedback.module';
+import { AiAnalysisModule } from '../artificial-intelligence/ai-analysis.module';
+// ... boshqa kerakli modullar
 
 @Global() // Agar TelegramService ni boshqa joylarda @Inject() qilmoqchi bo'lsangiz
 @Module({
   imports: [
-    ConfigModule, // Agar ConfigService global qilinmagan bo'lsa
-    UserModule,   // UserService ni TelegramUpdate ga inject qilish uchun
-    // TelegramUpdate ichida ishlatiladigan boshqa modullar:
-    ResponseTimeModule, // ResponseTimeService uchun
-    AiQueueModule,      // AiQueueService uchun
-    // ... boshqa modullar
+    ConfigModule,
+    forwardRef(() => UserModule),
+    forwardRef(() => MessageLoggingModule),
+    forwardRef(() => ResponseTimeTrackingModule),
+    forwardRef(() => HumanFeedbackModule),
+    forwardRef(() => AiAnalysisModule),
     TelegrafModule.forRootAsync({
-      imports: [ConfigModule], // Bu yerda ConfigModule kerak
+      imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => {
         const token = configService.get<string>('TELEGRAM_BOT_TOKEN');
         if (!token) {
-          // Bu xatolik konsolda chiqishi kerak edi. .env faylingizni tekshiring!
           throw new Error('TELEGRAM_BOT_TOKEN is not defined in .env file or ConfigService');
         }
         return {
-          token: token
-        };
+  token: token,
+};
       },
       inject: [ConfigService],
     }),
