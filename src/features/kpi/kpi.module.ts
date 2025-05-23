@@ -1,9 +1,9 @@
 
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { ClientsModule, Transport } from '@nestjs/microservices';
-import { KpiController } from './kpi.controller';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { KpiService } from './kpi.service';
+import { KpiController } from './kpi.controller';
 import { KpiScoreEntity } from './entities/kpi-score.entity';
 import { MessageLogEntity } from '../message-log/entities/message-log.entity';
 
@@ -18,7 +18,7 @@ import { MessageLogEntity } from '../message-log/entities/message-log.entity';
           urls: ['amqp://localhost:5672'],
           queue: 'kpi_queue',
           queueOptions: {
-            durable: true
+            durable: false
           },
         },
       },
