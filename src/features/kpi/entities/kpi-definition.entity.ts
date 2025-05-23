@@ -1,28 +1,32 @@
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 
-@Entity('kpi_definition')
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+
+@Entity('kpi_definitions')
 export class KpiDefinitionEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({ type: 'varchar', length: 100 })
   name: string;
 
-  @Column({ unique: true })
-  code: string;
-
-  @Column()
+  @Column({ type: 'text' })
   description: string;
 
-  @Column({ name: 'measurement_unit' })
-  measurementUnit: string;
+  @Column({ type: 'varchar', length: 50 })
+  metricType: string;
 
-  @Column({ name: 'target_value', type: 'float', nullable: true })
+  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
+  weight: number;
+
+  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
   targetValue: number;
 
-  @Column({ name: 'weight_in_overall_kpi', type: 'float', default: 1.0 })
-  weightInOverallKpi: number;
+  @Column({ type: 'boolean', default: true })
+  isActive: boolean;
 
-  @Column({ name: 'calculation_logic_type' })
-  calculationLogicType: string;
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
 }

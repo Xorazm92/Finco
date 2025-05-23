@@ -1,76 +1,82 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { InjectQueue } from '@nestjs/bull';
-import { Queue } from 'bull';
+import { Repository, Between } from 'typeorm';
 import { KpiScoreEntity } from './entities/kpi-score.entity';
 import { MessageLogEntity } from '../message-log/entities/message-log.entity';
+import { KpiDefinitionEntity } from '../kpi/entities/kpi-definition.entity';
 
 @Injectable()
 export class KpiCalculationService {
-  private readonly logger = new Logger(KpiCalculationService.name);
-
   constructor(
     @InjectRepository(KpiScoreEntity)
     private readonly kpiScoreRepo: Repository<KpiScoreEntity>,
     @InjectRepository(MessageLogEntity)
     private readonly messageLogRepo: Repository<MessageLogEntity>,
-    @InjectQueue('kpi-calculation') private readonly kpiQueue: Queue
+    @InjectRepository(KpiDefinitionEntity)
+    private readonly kpiDefRepo: Repository<KpiDefinitionEntity>,
   ) {}
 
-  async calculateUserKpi(userId: string, period: { start: Date; end: Date }) {
+  async calculateResponseTimeKpi(
+    userId: number,
+    period: { start: Date; end: Date },
+  ): Promise<number> {
     const messages = await this.messageLogRepo.find({
       where: {
-        senderTelegramId: userId,
-        sentAt: {
-          $gte: period.start,
-          $lte: period.end
+        senderId: userId,
+        createdAt: Between(period.start, period.end),
+      },
+    });
+
+    const responseTimes = messages
+      .filter((m) => m.responseTime !== null)
+      .map((m) => m.responseTime || 0);
+
+    if (!responseTimes.length) {
+      return 0;
+    }
+
+    return responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length;
+  }
+
+  async calculateQualityKpi(
+    userId: number,
+    period: { start: Date; end: Date },
+  ): Promise<number> {
+    const messages = await this.messageLogRepo.find({
+      where: {
+        senderId: userId,
+        createdAt: Between(period.start, period.end),
+      },
+      relations: ['feedback'],
+    });
+
+    let totalFeedback = 0;
+    let positiveFeedback = 0;
+
+    messages.forEach(msg => {
+      if (msg.feedback) {
+        totalFeedback++;
+        if (msg.feedback.sentiment === 'POSITIVE') {
+          positiveFeedback++;
         }
       }
     });
 
-    const totalMessages = messages.length;
-    const responseTimeAvg = this.calculateAverageResponseTime(messages);
-    const qualityScore = await this.calculateQualityScore(messages);
-
-    const kpiScore = new KpiScoreEntity();
-    kpiScore.userId = userId;
-    kpiScore.period = period;
-    kpiScore.totalMessages = totalMessages;
-    kpiScore.responseTimeScore = responseTimeAvg;
-    kpiScore.qualityScore = qualityScore;
-    kpiScore.finalScore = this.calculateFinalScore(responseTimeAvg, qualityScore);
-
-    return this.kpiScoreRepo.save(kpiScore);
+    return totalFeedback > 0 ? (positiveFeedback / totalFeedback) * 100 : 0;
   }
 
-  private calculateAverageResponseTime(messages: MessageLogEntity[]): number {
-    const responseTimes = messages
-      .filter(m => m.responseTimeSeconds)
-      .map(m => m.responseTimeSeconds);
-
-    if (responseTimes.length === 0) return 0;
-    return responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length;
+  async saveKpiScore(data: Partial<KpiScoreEntity>): Promise<KpiScoreEntity> {
+    const score = this.kpiScoreRepo.create(data);
+    return this.kpiScoreRepo.save(score);
   }
 
-  private async calculateQualityScore(messages: MessageLogEntity[]): Promise<number> {
-    const qualityFactors = messages.map(m => ({
-      isAnswered: m.questionStatus === 'ANSWERED' ? 1 : 0,
-      hasPositiveFeedback: m.userFeedback === 'POSITIVE' ? 1 : 0
-    }));
-
-    const totalScore = qualityFactors.reduce((score, factor) => {
-      return score + factor.isAnswered + factor.hasPositiveFeedback;
-    }, 0);
-
-    return totalScore / (messages.length * 2) * 100;
-  }
-
-  private calculateFinalScore(responseTimeScore: number, qualityScore: number): number {
-    // Весовые коэффициенты
-    const responseTimeWeight = 0.4;
-    const qualityWeight = 0.6;
-
-    return (responseTimeScore * responseTimeWeight) + (qualityScore * qualityWeight);
+  async getKpiScores(userId: number, period: { start: Date; end: Date }) {
+    return this.kpiScoreRepo.find({
+      where: {
+        userId,
+        scoringPeriod: Between(period.start, period.end),
+      },
+      relations: ['kpiDefinition'],
+    });
   }
 }
