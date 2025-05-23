@@ -1,11 +1,27 @@
+
 import { Module } from '@nestjs/common';
-import { AiAnalysisModule } from './ai-analysis.module';
-import { AiTestController } from './ai-test.controller';
-import { AiQueueModule } from './ai-queue.module';
-import { HumanFeedbackModule } from './human-feedback.module';
+import { ClientsModule, Transport } from '@nestjs/microservices';
+import { AiService } from './ai.service';
+import { LlmClientService } from './llm-client.service';
+import { PromptEngineeringService } from './prompt-engineering.service';
 
 @Module({
-  imports: [AiAnalysisModule, AiQueueModule, HumanFeedbackModule],
-  controllers: [AiTestController],
+  imports: [
+    ClientsModule.register([
+      {
+        name: 'AI_SERVICE',
+        transport: Transport.RMQ,
+        options: {
+          urls: ['amqp://0.0.0.0:5672'],
+          queue: 'ai_queue',
+          queueOptions: {
+            durable: false
+          },
+        },
+      },
+    ]),
+  ],
+  providers: [AiService, LlmClientService, PromptEngineeringService],
+  exports: [AiService],
 })
 export class AiModule {}

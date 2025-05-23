@@ -5,6 +5,8 @@ import { UserEntity } from '../user-management/entities/user.entity';
 import { UserChatRoleEntity } from '../user-management/entities/user-chat-role.entity';
 import { UserRole } from '../../shared/enums/user-role.enum';
 import * as bcrypt from 'bcryptjs';
+import { Inject } from '@nestjs/common';
+import { ClientProxy } from '@nestjs/microservices';
 
 @Injectable()
 export class UserService {
@@ -31,9 +33,9 @@ export class UserService {
         firstName: telegramUser.first_name,
         lastName: telegramUser.last_name,
         username: telegramUser.username,
-        
+
         isActive: true,
-        
+
         chatRoles: [],
       });
       await this.userRepository.save(user);
@@ -88,6 +90,7 @@ export class UserService {
     private readonly userRepository: Repository<UserEntity>,
     @InjectRepository(UserChatRoleEntity)
     private readonly userChatRoleRepository: Repository<UserChatRoleEntity>,
+    @Inject('USER_SERVICE') private readonly userClient: ClientProxy,
   ) {}
 
   async findAll(): Promise<UserEntity[]> {
@@ -241,4 +244,3 @@ export class UserService {
     return user ?? null;
   }
 }
-
