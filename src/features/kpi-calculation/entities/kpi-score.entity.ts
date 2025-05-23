@@ -1,33 +1,35 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  ManyToOne,
-  JoinColumn,
-} from 'typeorm';
-import { UserEntity } from '../../user-management/entities/user.entity';
+
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 
 @Entity('kpi_scores')
 export class KpiScoreEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => UserEntity)
-  @JoinColumn({ name: 'user_id' })
-  user: UserEntity;
+  @Column()
+  userId: string;
 
-  @Column({ name: 'kpi_metric_code', type: 'varchar', length: 100 })
-  kpiMetricCode: string; // Masalan: "AVG_RESPONSE_TIME"
+  @Column('json')
+  period: {
+    start: Date;
+    end: Date;
+  };
 
-  @Column({ name: 'score_value', type: 'float' })
-  scoreValue: number;
+  @Column('int')
+  totalMessages: number;
 
-  @Column({ name: 'period_start_date', type: 'date' })
-  periodStartDate: Date;
+  @Column('float')
+  responseTimeScore: number;
 
-  @Column({ name: 'period_end_date', type: 'date' })
-  periodEndDate: Date;
+  @Column('float')
+  qualityScore: number;
 
-  @Column({ name: 'calculated_at', type: 'timestamp' })
-  calculatedAt: Date;
+  @Column('float')
+  finalScore: number;
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
 }
