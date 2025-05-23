@@ -1,13 +1,14 @@
+
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UserService } from '../user-management/user.service';
-import * as bcrypt from 'bcryptjs';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class AuthService {
   constructor(
-    private userService: UserService,
-    private jwtService: JwtService,
+    private readonly userService: UserService,
+    private readonly jwtService: JwtService,
   ) {}
 
   async validateUser(username: string, password: string): Promise<any> {
@@ -16,21 +17,30 @@ export class AuthService {
       throw new UnauthorizedException('User not found');
     }
 
-    const hashedPassword = user.hashedPassword || '';
-    const isPasswordValid = await bcrypt.compare(password, hashedPassword);
-
+    const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const { hashedPassword: _, ...result } = user;
+    const { password: _, ...result } = user;
     return result;
   }
 
-  async login(user: any) {
-    const payload = { username: user.username, sub: user.id };
+  async login(username: string, password: string) {
+    const user = await this.validateUser(username, password);
+    const payload = { 
+      sub: user.id, 
+      username: user.username,
+      role: user.role 
+    };
+    
     return {
       access_token: this.jwtService.sign(payload),
+      user: {
+        id: user.id,
+        username: user.username,
+        role: user.role
+      }
     };
   }
 }
