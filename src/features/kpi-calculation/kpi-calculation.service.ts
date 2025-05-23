@@ -22,14 +22,14 @@ export class KpiCalculationService {
   ): Promise<number> {
     const messages = await this.messageLogRepo.find({
       where: {
-        senderId: userId,
-        createdAt: Between(period.start, period.end),
+        userId: userId,
       },
+      relations: ['user']
     });
 
     const responseTimes = messages
-      .filter((m) => m.responseTime !== null)
-      .map((m) => m.responseTime || 0);
+      .filter((m) => m.responseTimeSeconds !== null)
+      .map((m) => m.responseTimeSeconds || 0);
 
     if (!responseTimes.length) {
       return 0;

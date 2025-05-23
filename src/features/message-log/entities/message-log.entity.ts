@@ -1,52 +1,33 @@
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn } from 'typeorm';
+import { UserEntity } from '../../user-management/entities/user.entity';
 
-@Entity('message_log')
+@Entity('message_logs')
 export class MessageLogEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ name: 'telegram_message_id' })
-  telegramMessageId: number;
+  @Column({ name: 'chat_id', type: 'varchar' })
+  chatId: string;
 
-  @Column({ name: 'telegram_chat_id' })
-  telegramChatId: number;
-
-  @Column({ name: 'sender_telegram_id' })
-  senderTelegramId: string;
-
-  @Column({ name: 'sender_role_at_moment' })
-  senderRoleAtMoment: string;
-
-  @Column({ name: 'sent_at' })
-  sentAt: Date;
-
-  @Column({ name: 'text_content', type: 'text', nullable: true })
-  textContent: string | null;
-
-  @Column({ name: 'transcribed_text', type: 'text', nullable: true })
-  transcribed_text?: string;
-
-  @Column({ name: 'is_reply_to_message_id', type: 'bigint', nullable: true })
-  isReplyToMessageId: number | null;
-
-  @Column({ name: 'has_attachments', default: false })
-  hasAttachments: boolean;
-
-  @Column({ name: 'attachment_type', type: 'varchar', nullable: true })
-  attachmentType: string | null;
-
-  @Column({ name: 'is_question', default: false })
-  isQuestion: boolean;
-
-  @Column({ name: 'question_status', type: 'enum', enum: ['PENDING', 'ANSWERED', 'TIMEOUT'], default: 'PENDING' })
-  questionStatus: 'PENDING' | 'ANSWERED' | 'TIMEOUT';
-
-  @Column({ name: 'answered_by_message_id', type: 'bigint', nullable: true })
-  answeredByMessageId: number | null;
+  @Column({ name: 'message_id', type: 'varchar' })
+  messageId: string;
 
   @Column({ name: 'response_time_seconds', type: 'integer', nullable: true })
-  responseTimeSeconds: number | null;
+  responseTimeSeconds: number;
 
-  @Column({ name: 'answer_detection_method', type: 'varchar', nullable: true })
-  answerDetectionMethod: string | null;
+  @Column({ name: 'feedback', type: 'jsonb', nullable: true })
+  feedback: {
+    sentiment: 'POSITIVE' | 'NEGATIVE' | 'NEUTRAL';
+    score: number;
+  };
+
+  @ManyToOne(() => UserEntity)
+  @JoinColumn({ name: 'user_id' })
+  user: UserEntity;
+
+  @Column({ name: 'user_id' })
+  userId: number;
+
+  @CreateDateColumn({ name: 'created_at' })
+  createdAt: Date;
 }

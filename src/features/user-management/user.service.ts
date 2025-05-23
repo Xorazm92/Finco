@@ -165,7 +165,11 @@ export class UserService {
     role: UserRole,
     assignedBy?: string,
   ): Promise<UserChatRoleEntity> {
-    let userChatRole = await this.userChatRoleRepository.findOne({ where: { userId, chatId } });
+    let userChatRole = await this.userChatRoleRepository
+      .createQueryBuilder('ucr')
+      .where('ucr.user = :userId', { userId })
+      .andWhere('ucr.chatId = :chatId', { chatId })
+      .getOne();
     let assignedByUserIdNum: number | undefined = undefined;
     if (assignedBy) {
       const assignedByUser = await this.userRepository.findOne({ where: { telegramId: String(assignedBy) } });
